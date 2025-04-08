@@ -1,4 +1,5 @@
 import { FC } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -8,6 +9,29 @@ interface SidebarProps {
 }
 
 const Sidebar: FC<SidebarProps> = ({ isOpen, onClose, activeTab, onTabChange }) => {
+  const navigate = useNavigate();
+  
+  // Fonction pour gérer la navigation
+  const handleNavigation = (tab: string) => {
+    onTabChange(tab);
+    
+    // Navigation basée sur l'onglet sélectionné
+    switch(tab) {
+      case 'calendar':
+        navigate('/dashboard');
+        break;
+      case 'clients':
+        // À implémenter plus tard quand la page clients sera créée
+        navigate('/dashboard'); // Pour l'instant, reste sur dashboard
+        break;
+      case 'services':
+        navigate('/services');
+        break;
+      default:
+        navigate('/dashboard');
+    }
+  }
+  
   return (
     <>
       {/* La sidebar */}
@@ -22,10 +46,10 @@ const Sidebar: FC<SidebarProps> = ({ isOpen, onClose, activeTab, onTabChange }) 
             <ul className="space-y-6">
               <li>
                 <button 
-                  onClick={() => onTabChange('calendar')}
+                  onClick={() => handleNavigation('calendar')}
                   className={`flex items-center w-full space-x-3 py-2 px-3 rounded-md transition-colors ${
                     activeTab === 'calendar' 
-                      ? 'bg-indigo-700 text-white' 
+                      ? 'bg-gray-700 text-white' 
                       : 'text-gray-100 hover:bg-gray-700 hover:text-white'
                   }`}
                 >
@@ -37,10 +61,10 @@ const Sidebar: FC<SidebarProps> = ({ isOpen, onClose, activeTab, onTabChange }) 
               </li>
               <li>
                 <button 
-                  onClick={() => onTabChange('clients')}
+                  onClick={() => handleNavigation('clients')}
                   className={`flex items-center w-full space-x-3 py-2 px-3 rounded-md transition-colors ${
                     activeTab === 'clients' 
-                      ? 'bg-indigo-700 text-white' 
+                      ? 'bg-gray-700 text-white' 
                       : 'text-gray-100 hover:bg-gray-700 hover:text-white'
                   }`}
                 >
@@ -52,10 +76,10 @@ const Sidebar: FC<SidebarProps> = ({ isOpen, onClose, activeTab, onTabChange }) 
               </li>
               <li>
                 <button 
-                  onClick={() => onTabChange('services')}
+                  onClick={() => handleNavigation('services')}
                   className={`flex items-center w-full space-x-3 py-2 px-3 rounded-md transition-colors ${
                     activeTab === 'services' 
-                      ? 'bg-indigo-700 text-white' 
+                      ? 'bg-gray-700 text-white' 
                       : 'text-gray-100 hover:bg-gray-700 hover:text-white'
                   }`}
                 >

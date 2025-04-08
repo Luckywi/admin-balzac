@@ -45,9 +45,9 @@
   }
   
   .rbc-btn-group button.rbc-active {
-    background-color: #4F46E5;
+    background-color: #111827;
     color: white;
-    border-color: #4F46E5;
+    border-color: #111827;
   }
   
   .rbc-btn-group button:first-child {
@@ -111,7 +111,7 @@
   }
   
   .rbc-show-more {
-    color: #4F46E5;
+    color: #111827;
     font-weight: 500;
     font-size: 0.8rem;
     background-color: transparent;
