@@ -13,6 +13,7 @@ import { dateFnsLocalizer } from 'react-big-calendar'
 import type { ViewKey } from 'react-big-calendar';
 import { collection, getDocs, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import RdvDetailsModal from '../modals/RdvDetailsModal'; // Importez la modale de détails
 
 // Locales disponibles
 const locales = { fr }
@@ -38,6 +39,8 @@ interface CalendarEvent {
     notes?: string;
     staffId?: string;
     resourceId?: string; // Pour pouvoir éventuellement filtrer par coiffeur
+    price?: number;
+    clientPhone?: string;
 }
 
 interface RdvData {
@@ -85,7 +88,9 @@ const Calendar: React.FC<{ staffFilter?: string }> = ({ staffFilter }) => {
               service: data.serviceTitle,
               notes: data.notes,
               staffId: data.staffId,
-              resourceId: data.staffId // Pour filtrer par coiffeur si nécessaire
+              resourceId: data.staffId, // Pour filtrer par coiffeur si nécessaire
+              price: data.price,
+              clientPhone: data.clientPhone
             };
           });
           
@@ -124,6 +129,16 @@ const Calendar: React.FC<{ staffFilter?: string }> = ({ staffFilter }) => {
 
   const handleSelectEvent = (event: CalendarEvent) => {
     setSelectedEvent(event);
+  }
+
+  const handleCloseModal = () => {
+    setSelectedEvent(null);
+  }
+
+  // Fonction pour rafraîchir les données après une modification ou suppression
+  const handleRefresh = () => {
+    // On n'a pas besoin de faire quoi que ce soit ici car
+    // les données sont automatiquement mises à jour via onSnapshot
   }
 
   const eventStyleGetter = (event: CalendarEvent) => {
@@ -207,27 +222,13 @@ const Calendar: React.FC<{ staffFilter?: string }> = ({ staffFilter }) => {
         }}
       />
 
+      {/* Remplacer la modale simple par RdvDetailsModal */}
       {selectedEvent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-gray-800">{selectedEvent.title}</h3>
-              <button onClick={() => setSelectedEvent(null)} className="text-gray-900 hover:text-gray-700">
-                ✕
-              </button>
-            </div>
-            <div className="space-y-2 text-gray-600">
-              <p><strong>Client :</strong> {selectedEvent.client}</p>
-              <p><strong>Service :</strong> {selectedEvent.service}</p>
-              <p><strong>Début :</strong> {dfFormat(selectedEvent.start, 'dd/MM/yyyy HH:mm', { locale: fr })}</p>
-              <p><strong>Fin :</strong> {dfFormat(selectedEvent.end, 'dd/MM/yyyy HH:mm', { locale: fr })}</p>
-              <p><strong>Coiffeur :</strong> {selectedEvent.staffId === 'bea' ? 'Béatrice' : 
-                                                selectedEvent.staffId === 'cyrille' ? 'Cyrille' : 
-                                                selectedEvent.staffId}</p>
-              {selectedEvent.notes && <p><strong>Notes :</strong> {selectedEvent.notes}</p>}
-            </div>
-          </div>
-        </div>
+        <RdvDetailsModal 
+          event={selectedEvent} 
+          onClose={handleCloseModal} 
+          onRefresh={handleRefresh}
+        />
       )}
     </div>
   )

@@ -35,6 +35,14 @@ input, textarea, select {
   color: #000000; /* ou une autre couleur foncée lisible */
 }
 
+div {
+  color: #000000;
+}
+
+p {
+  color: black;
+}
+
 a {
   font-weight: 500;
   color: #646cff;

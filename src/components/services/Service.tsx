@@ -302,7 +302,7 @@ const Service = () => {
         {sections.length > 0 ? (
           <div className="space-y-6">
             {sections.map(section => (
-              <div key={section.id} className="border border-gray-200 rounded-lg overflow-hidden">
+              <div key={section.id} className="border border-gray-900 rounded-lg overflow-hidden">
                 {/* En-tête de section */}
                 <div 
                   className="bg-gray-50 px-6 py-4 flex justify-between items-center cursor-pointer"
@@ -368,7 +368,7 @@ const Service = () => {
                         {section.services.map(service => (
                           <div 
                             key={service.id} 
-                            className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                            className="border border-gray-900 rounded-lg p-4 hover:shadow-md transition-shadow"
                           >
                             <div className="flex justify-between items-start mb-2">
                               <h4 className="font-medium text-gray-900">{service.title}</h4>
