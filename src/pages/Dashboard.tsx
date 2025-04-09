@@ -51,7 +51,7 @@ export default function Dashboard() {
               <div className="flex justify-center mb-6">
                 <button
                   onClick={() => setIsRdvModalOpen(true)}
-                  className="px-6 py-3 bg-gray-900 text-white rounded-md hover:bg-gray-900 transition-colors shadow-md text-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                  className="px-6 py-3 bg-gray-900 text-white rounded-md hover:bg-gray-900 transition-colors shadow-md text-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
                 >
                   CRÉER UN RDV
                 </button>

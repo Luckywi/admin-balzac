@@ -31,6 +31,10 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+input, textarea, select {
+  color: #000000; /* ou une autre couleur foncée lisible */
+}
+
 a {
   font-weight: 500;
   color: #646cff;

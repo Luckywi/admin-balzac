@@ -53,7 +53,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                   name="clientName"
                   value={formData.clientName}
                   onChange={handleChange}
-                  className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500
+                  className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900
 "
                   placeholder="Nom et prénom"
                   required
@@ -70,7 +70,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                   name="clientPhone"
                   value={formData.clientPhone}
                   onChange={handleChange}
-                  className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500
+                  className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900
 "
                   placeholder="0612345678"
                   required
@@ -87,7 +87,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                   name="service"
                   value={formData.service}
                   onChange={handleChange}
-                  className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500
+                  className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900
 "
                   required
                 >
@@ -110,7 +110,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                   name="staff"
                   value={formData.staff}
                   onChange={handleChange}
-                  className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500
+                  className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900
 "
                   required
                 >
@@ -132,7 +132,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                     name="date"
                     value={formData.date}
                     onChange={handleChange}
-                    className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500
+                    className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900
 "
                     required
                   />
@@ -148,7 +148,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                     name="time"
                     value={formData.time}
                     onChange={handleChange}
-                    className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500
+                    className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900
 "
                     required
                   />
@@ -156,7 +156,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
               </div>
               
               {/* Informations sur la durée et le prix - Affichage informatif */}
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mt-4">
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-900 mt-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Durée estimée:</span>
                   <span className="font-medium">45 min</span>
@@ -173,13 +173,13 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
             >
               Annuler
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
             >
               Créer le rendez-vous
             </button>

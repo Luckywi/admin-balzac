@@ -330,7 +330,7 @@ const DispoSalon = () => {
             
             <div className="space-y-4 mt-6">
               {DAYS_OF_WEEK.map(day => (
-                <div key={day} className="flex flex-wrap md:flex-nowrap items-center gap-4 py-3 border-b border-gray-200">
+                <div key={day} className="flex flex-wrap md:flex-nowrap items-center gap-4 py-3 border-b border-gray-900">
                   <div className="w-full md:w-36 flex items-center">
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -339,7 +339,7 @@ const DispoSalon = () => {
                         onChange={() => handleWorkDayChange(day)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 border-2 border-gray-900 
+                      <div className="w-11 h-6 bg-gray-900 border-2 border-gray-900 
   peer-checked:border-2 peer-checked:border-transparent
   peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 
   rounded-full peer relative transition-colors
@@ -366,7 +366,7 @@ const DispoSalon = () => {
                           id={`start-${day}`}
                           value={workHours[day]?.start || ''}
                           onChange={(e) => handleWorkHoursChange(day, 'start', e.target.value)}
-                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-500 focus:ring-gray-500 w-auto"
+                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-auto"
                         />
                       </div>
                       
@@ -379,7 +379,7 @@ const DispoSalon = () => {
                           id={`end-${day}`}
                           value={workHours[day]?.end || ''}
                           onChange={(e) => handleWorkHoursChange(day, 'end', e.target.value)}
-                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-500 focus:ring-gray-500 w-auto"
+                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-auto"
                         />
                       </div>
                     </div>
@@ -398,7 +398,7 @@ const DispoSalon = () => {
             </p>
             
             {/* Formulaire d'ajout de pause */}
-            <div className="mb-6 p-5 bg-gray-50 rounded-lg shadow-sm border border-gray-200">
+            <div className="mb-6 p-5 bg-gray-50 rounded-lg shadow-sm border border-gray-900">
               <h3 className="font-medium text-gray-900 mb-4">Ajouter une pause</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
@@ -406,7 +406,7 @@ const DispoSalon = () => {
                   <select
                     value={newBreak.day}
                     onChange={(e) => setNewBreak({...newBreak, day: e.target.value})}
-                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-500 focus:ring-gray-500 w-auto"
+                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-auto"
                   >
                     {DAYS_OF_WEEK.filter(day => workDays[day]).map(day => (
                       <option key={day} value={day}>{day}</option>
@@ -420,7 +420,7 @@ const DispoSalon = () => {
                     type="time"
                     value={newBreak.start}
                     onChange={(e) => setNewBreak({...newBreak, start: e.target.value})}
-                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-500 focus:ring-gray-500 w-auto"
+                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-auto"
                   />
                 </div>
                 
@@ -430,14 +430,14 @@ const DispoSalon = () => {
                     type="time"
                     value={newBreak.end}
                     onChange={(e) => setNewBreak({...newBreak, end: e.target.value})}
-                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-500 focus:ring-gray-500 w-auto"
+                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-auto"
                   />
                 </div>
               </div>
               
               <button
                 onClick={handleAddBreak}
-                className="mt-4 px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                className="mt-4 px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
               >
                 Ajouter cette pause
               </button>
@@ -445,34 +445,34 @@ const DispoSalon = () => {
             
             {/* Liste des pauses */}
             {breaks.length > 0 ? (
-              <div className="overflow-x-auto mt-6 rounded-lg border border-gray-200">
-                <table className="min-w-full divide-y divide-gray-200">
+              <div className="overflow-x-auto mt-6 rounded-lg border border-gray-900">
+                <table className="min-w-full divide-y divide-gray-900">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                         Jour
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                         Début
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                         Fin
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white divide-y divide-gray-900">
                     {breaks.map(breakItem => (
                       <tr key={breakItem.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {breakItem.day}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {breakItem.start}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {breakItem.end}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -491,7 +491,7 @@ const DispoSalon = () => {
                 </table>
               </div>
             ) : (
-              <div className="py-6 text-center text-gray-500 bg-gray-50 rounded-lg mt-4 border border-gray-200">
+              <div className="py-6 text-center text-gray-900 bg-gray-50 rounded-lg mt-4 border border-gray-900">
                 Aucune pause configurée
               </div>
             )}
@@ -506,7 +506,7 @@ const DispoSalon = () => {
             </p>
             
             {/* Formulaire d'ajout de fermeture */}
-            <div className="mb-6 p-5 bg-gray-50 rounded-lg shadow-sm border border-gray-200">
+            <div className="mb-6 p-5 bg-gray-50 rounded-lg shadow-sm border border-gray-900">
               <h3 className="font-medium text-gray-900 mb-4">Ajouter une fermeture exceptionnelle</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
@@ -515,7 +515,7 @@ const DispoSalon = () => {
                     type="date"
                     value={newVacation.startDate}
                     onChange={(e) => setNewVacation({...newVacation, startDate: e.target.value})}
-                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-500 focus:ring-gray-500 w-auto"
+                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-auto"
                   />
                 </div>
                 
@@ -525,7 +525,7 @@ const DispoSalon = () => {
                     type="date"
                     value={newVacation.endDate}
                     onChange={(e) => setNewVacation({...newVacation, endDate: e.target.value})}
-                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-500 focus:ring-gray-500 w-auto"
+                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-auto"
                   />
                 </div>
                 
@@ -536,14 +536,14 @@ const DispoSalon = () => {
                     placeholder="Vacances, travaux, etc."
                     value={newVacation.description}
                     onChange={(e) => setNewVacation({...newVacation, description: e.target.value})}
-                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-500 focus:ring-gray-500 w-auto"
+                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-auto"
                   />
                 </div>
               </div>
               
               <button
                 onClick={handleAddVacation}
-                className="mt-4 px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                className="mt-4 px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
                 disabled={!newVacation.startDate || !newVacation.endDate}
               >
                 Ajouter cette fermeture
@@ -552,34 +552,34 @@ const DispoSalon = () => {
             
             {/* Liste des fermetures */}
             {vacations.length > 0 ? (
-              <div className="overflow-x-auto mt-6 rounded-lg border border-gray-200">
-                <table className="min-w-full divide-y divide-gray-200">
+              <div className="overflow-x-auto mt-6 rounded-lg border border-gray-900">
+                <table className="min-w-full divide-y divide-gray-900">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                         Début
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                         Fin
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                         Motif
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white divide-y divide-gray-900">
                     {vacations.map(vacation => (
                       <tr key={vacation.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {new Date(vacation.startDate).toLocaleDateString('fr-FR')}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {new Date(vacation.endDate).toLocaleDateString('fr-FR')}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {vacation.description}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -598,7 +598,7 @@ const DispoSalon = () => {
                 </table>
               </div>
             ) : (
-              <div className="py-6 text-center text-gray-500 bg-gray-50 rounded-lg mt-4 border border-gray-200">
+              <div className="py-6 text-center text-gray-900 bg-gray-50 rounded-lg mt-4 border border-gray-900">
                 Aucune fermeture exceptionnelle configurée
               </div>
             )}
@@ -609,7 +609,7 @@ const DispoSalon = () => {
         <div className="mt-6 flex justify-end">
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 flex items-center"
+            className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 flex items-center"
             disabled={isSaving}
           >
             {isSaving ? (

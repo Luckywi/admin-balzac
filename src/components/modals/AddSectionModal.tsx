@@ -63,7 +63,7 @@ const AddSectionModal = ({ onClose, onSubmit }: AddSectionModalProps) => {
                   setTitle(e.target.value);
                   setError('');
                 }}
-                className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500"
+                className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
                 placeholder="Ex: Coupes femmes, Colorations..."
                 disabled={isSubmitting}
               />
@@ -75,14 +75,14 @@ const AddSectionModal = ({ onClose, onSubmit }: AddSectionModalProps) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
               disabled={isSubmitting}
             >
               Annuler
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 flex items-center"
+              className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 flex items-center"
               disabled={isSubmitting}
             >
               {isSubmitting ? (

@@ -227,7 +227,7 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
           </h2>
           <button 
             onClick={onClose}
-            className="text-white hover:text-gray-200 focus:outline-none"
+            className="text-white hover:text-gray-900 focus:outline-none"
             aria-label="Fermer"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -301,7 +301,7 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                   
                   <div className="space-y-4 mt-6">
                     {DAYS_OF_WEEK.map(day => (
-                      <div key={day} className="flex flex-wrap md:flex-nowrap items-center gap-4 py-3 border-b border-gray-200">
+                      <div key={day} className="flex flex-wrap md:flex-nowrap items-center gap-4 py-3 border-b border-gray-900">
                         <div className="w-full md:w-36 flex items-center">
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
@@ -310,7 +310,7 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                               onChange={() => handleWorkDayChange(day)}
                               className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-gray-200 border-2 border-gray-900 
+                            <div className="w-11 h-6 bg-gray-900 border-2 border-gray-900 
                               peer-checked:border-2 peer-checked:border-transparent
                               peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 
                               rounded-full peer relative transition-colors
@@ -335,7 +335,7 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                                 id={`start-${day}`}
                                 value={workHours[day]?.start || ''}
                                 onChange={(e) => handleWorkHoursChange(day, 'start', e.target.value)}
-                                className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-500 focus:ring-gray-500 w-auto"
+                                className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-auto"
                               />
                             </div>
                             
@@ -348,7 +348,7 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                                 id={`end-${day}`}
                                 value={workHours[day]?.end || ''}
                                 onChange={(e) => handleWorkHoursChange(day, 'end', e.target.value)}
-                                className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-500 focus:ring-gray-500 w-auto"
+                                className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-auto"
                               />
                             </div>
                           </div>
@@ -367,7 +367,7 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                   </p>
                   
                   {/* Formulaire d'ajout de pause */}
-                  <div className="mb-6 p-5 bg-gray-50 rounded-lg shadow-sm border border-gray-200">
+                  <div className="mb-6 p-5 bg-gray-50 rounded-lg shadow-sm border border-gray-900">
                     <h3 className="font-medium text-gray-900 mb-4">Ajouter une pause</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
@@ -375,7 +375,7 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                         <select
                           value={newBreak.day}
                           onChange={(e) => setNewBreak({...newBreak, day: e.target.value as DayOfWeek})}
-                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-500 focus:ring-gray-500 w-full"
+                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-full"
                           disabled={!Object.values(workDays).some(v => v)}
                         >
                           {DAYS_OF_WEEK.filter(day => workDays[day]).map(day => (
@@ -395,7 +395,7 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                           type="time"
                           value={newBreak.start}
                           onChange={(e) => setNewBreak({...newBreak, start: e.target.value})}
-                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-500 focus:ring-gray-500 w-full"
+                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-full"
                         />
                       </div>
                       
@@ -405,14 +405,14 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                           type="time"
                           value={newBreak.end}
                           onChange={(e) => setNewBreak({...newBreak, end: e.target.value})}
-                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-500 focus:ring-gray-500 w-full"
+                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-full"
                         />
                       </div>
                     </div>
                     
                     <button
                       onClick={handleAddBreak}
-                      className="mt-4 px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                      className="mt-4 px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
                       disabled={!Object.values(workDays).some(v => v)}
                     >
                       Ajouter cette pause
@@ -421,34 +421,34 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                   
                   {/* Liste des pauses */}
                   {breaks.length > 0 ? (
-                    <div className="overflow-x-auto mt-6 rounded-lg border border-gray-200">
-                      <table className="min-w-full divide-y divide-gray-200">
+                    <div className="overflow-x-auto mt-6 rounded-lg border border-gray-900">
+                      <table className="min-w-full divide-y divide-gray-900">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                               Jour
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                               Début
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                               Fin
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                               Actions
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="bg-white divide-y divide-gray-900">
                           {breaks.map(breakItem => (
                             <tr key={breakItem.id} className="hover:bg-gray-50">
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {breakItem.day}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {breakItem.start}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {breakItem.end}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -468,7 +468,7 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                       </table>
                     </div>
                   ) : (
-                    <div className="py-6 text-center text-gray-500 bg-gray-50 rounded-lg mt-4 border border-gray-200">
+                    <div className="py-6 text-center text-gray-900 bg-gray-50 rounded-lg mt-4 border border-gray-900">
                       Aucune pause configurée
                     </div>
                   )}
@@ -483,7 +483,7 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                   </p>
                   
                   {/* Formulaire d'ajout de vacances */}
-                  <div className="mb-6 p-5 bg-gray-50 rounded-lg shadow-sm border border-gray-200">
+                  <div className="mb-6 p-5 bg-gray-50 rounded-lg shadow-sm border border-gray-900">
                     <h3 className="font-medium text-gray-900 mb-4">Ajouter une période d'absence</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
@@ -492,7 +492,7 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                           type="date"
                           value={newVacation.startDate}
                           onChange={(e) => setNewVacation({...newVacation, startDate: e.target.value})}
-                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-500 focus:ring-gray-500 w-full"
+                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-full"
                         />
                       </div>
                       
@@ -502,7 +502,7 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                           type="date"
                           value={newVacation.endDate}
                           onChange={(e) => setNewVacation({...newVacation, endDate: e.target.value})}
-                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-500 focus:ring-gray-500 w-full"
+                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-full"
                         />
                       </div>
                       
@@ -513,14 +513,14 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                           placeholder="Congés, formation, etc."
                           value={newVacation.description}
                           onChange={(e) => setNewVacation({...newVacation, description: e.target.value})}
-                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-500 focus:ring-gray-500 w-full"
+                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-full"
                         />
                       </div>
                     </div>
                     
                     <button
                       onClick={handleAddVacation}
-                      className="mt-4 px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                      className="mt-4 px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
                       disabled={!newVacation.startDate || !newVacation.endDate}
                     >
                       Ajouter cette période
@@ -529,34 +529,34 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                   
                   {/* Liste des vacances */}
                   {vacations.length > 0 ? (
-                    <div className="overflow-x-auto mt-6 rounded-lg border border-gray-200">
-                      <table className="min-w-full divide-y divide-gray-200">
+                    <div className="overflow-x-auto mt-6 rounded-lg border border-gray-900">
+                      <table className="min-w-full divide-y divide-gray-900">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                               Début
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                               Fin
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                               Description
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                               Actions
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="bg-white divide-y divide-gray-900">
                           {vacations.map(vacation => (
                             <tr key={vacation.id} className="hover:bg-gray-50">
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {new Date(vacation.startDate).toLocaleDateString('fr-FR')}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {new Date(vacation.endDate).toLocaleDateString('fr-FR')}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {vacation.description}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -576,7 +576,7 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                       </table>
                     </div>
                   ) : (
-                    <div className="py-6 text-center text-gray-500 bg-gray-50 rounded-lg mt-4 border border-gray-200">
+                    <div className="py-6 text-center text-gray-900 bg-gray-50 rounded-lg mt-4 border border-gray-900">
                       Aucune période d'absence configurée
                     </div>
                   )}
@@ -588,13 +588,13 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
             <div className="bg-gray-50 px-6 py-4 border-t flex justify-end space-x-3">
               <button
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
               >
                 Annuler
               </button>
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
                 disabled={isLoading}
               >
                 {isLoading ? 'Enregistrement...' : 'Enregistrer'}
