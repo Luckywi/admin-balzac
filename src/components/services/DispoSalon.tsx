@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
 
 interface WorkHours {
   start: string;
@@ -17,6 +19,14 @@ interface Vacation {
   startDate: string;
   endDate: string;
   description: string;
+}
+
+interface SalonConfig {
+  workDays: Record<string, boolean>;
+  workHours: Record<string, WorkHours>;
+  breaks: Break[];
+  vacations: Vacation[];
+  updatedAt: any;
 }
 
 const DAYS_OF_WEEK = [
@@ -53,6 +63,10 @@ const DispoSalon = () => {
   const [workHours, setWorkHours] = useState<Record<string, WorkHours>>(DEFAULT_WORK_HOURS);
   const [breaks, setBreaks] = useState<Break[]>([]);
   const [vacations, setVacations] = useState<Vacation[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Pour l'ajout de pause
   const [newBreak, setNewBreak] = useState<Omit<Break, 'id'>>({
@@ -67,6 +81,45 @@ const DispoSalon = () => {
     endDate: '',
     description: ''
   });
+
+  // Charger les données au chargement du composant
+  useEffect(() => {
+    loadSalonConfig();
+  }, []);
+
+  // Charger la configuration du salon depuis Firestore
+  const loadSalonConfig = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const docRef = doc(db, 'salon', 'config');
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data() as SalonConfig;
+        
+        setWorkDays(data.workDays || {
+          'Lundi': true,
+          'Mardi': true,
+          'Mercredi': true,
+          'Jeudi': true,
+          'Vendredi': true,
+          'Samedi': true,
+          'Dimanche': false
+        });
+        
+        setWorkHours(data.workHours || DEFAULT_WORK_HOURS);
+        setBreaks(data.breaks || []);
+        setVacations(data.vacations || []);
+      }
+    } catch (err) {
+      console.error("Erreur lors du chargement de la configuration:", err);
+      setError("Impossible de charger les données. Veuillez réessayer.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Gestion des jours d'ouverture
   const handleWorkDayChange = (day: string) => {
@@ -98,25 +151,52 @@ const DispoSalon = () => {
 
   // Ajout d'une pause
   const handleAddBreak = () => {
+    // Validation de la pause
+    if (newBreak.start >= newBreak.end) {
+      setError("L'heure de fin doit être après l'heure de début");
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
     const id = `break-${Date.now()}`;
     setBreaks([...breaks, { ...newBreak, id }]);
     
     // Réinitialiser le formulaire
     setNewBreak({
-      day: 'Lundi',
+      day: newBreak.day,
       start: '12:00',
       end: '13:00'
     });
+    
+    // Message de confirmation
+    setSuccessMessage("Pause ajoutée avec succès");
+    setTimeout(() => setSuccessMessage(null), 3000);
   };
 
   // Suppression d'une pause
   const handleDeleteBreak = (id: string) => {
     setBreaks(breaks.filter(item => item.id !== id));
+    
+    // Message de confirmation
+    setSuccessMessage("Pause supprimée avec succès");
+    setTimeout(() => setSuccessMessage(null), 3000);
   };
 
   // Ajout d'une période de vacances/fermeture
   const handleAddVacation = () => {
-    if (!newVacation.startDate || !newVacation.endDate) return;
+    // Validation
+    if (!newVacation.startDate || !newVacation.endDate) {
+      setError("Les dates de début et de fin sont obligatoires");
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
+    // Vérifier que la date de fin est après la date de début
+    if (new Date(newVacation.startDate) > new Date(newVacation.endDate)) {
+      setError("La date de fin doit être après la date de début");
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
     
     const id = `vacation-${Date.now()}`;
     setVacations([...vacations, { ...newVacation, id }]);
@@ -127,26 +207,71 @@ const DispoSalon = () => {
       endDate: '',
       description: ''
     });
+    
+    // Message de confirmation
+    setSuccessMessage("Fermeture exceptionnelle ajoutée avec succès");
+    setTimeout(() => setSuccessMessage(null), 3000);
   };
 
   // Suppression d'une période de vacances/fermeture
   const handleDeleteVacation = (id: string) => {
     setVacations(vacations.filter(item => item.id !== id));
+    
+    // Message de confirmation
+    setSuccessMessage("Fermeture exceptionnelle supprimée avec succès");
+    setTimeout(() => setSuccessMessage(null), 3000);
   };
 
   // Enregistrement des modifications
-  const handleSave = () => {
-    // Ici vous pourriez envoyer les données à votre backend
-    console.log({
-      workDays,
-      workHours,
-      breaks,
-      vacations
-    });
-    
-    // Afficher un message de confirmation
-    alert('Les horaires du salon ont été mis à jour.');
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      setError(null);
+      
+      // Préparer les données à enregistrer
+      const salonConfig: SalonConfig = {
+        workDays,
+        workHours,
+        breaks,
+        vacations,
+        updatedAt: serverTimestamp()
+      };
+      
+      // Enregistrer dans Firestore
+      await setDoc(doc(db, 'salon', 'config'), salonConfig);
+      
+      // Message de confirmation
+      setSuccessMessage("Les horaires du salon ont été mis à jour avec succès");
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      console.error("Erreur lors de l'enregistrement:", err);
+      setError("Impossible d'enregistrer les modifications. Veuillez réessayer.");
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  // Afficher un indicateur de chargement pendant le chargement initial
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="bg-gray-900 px-6 py-4">
+          <h2 className="text-xl font-semibold text-white">
+            Horaires d'ouverture du salon
+          </h2>
+        </div>
+        <div className="p-6 flex justify-center items-center h-64">
+          <div className="flex flex-col items-center">
+            <svg className="animate-spin h-8 w-8 text-gray-900 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p className="text-gray-600">Chargement des horaires...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -156,6 +281,13 @@ const DispoSalon = () => {
           Horaires d'ouverture du salon
         </h2>
       </div>
+      
+      {/* Messages de notification */}
+      {(error || successMessage) && (
+        <div className={`p-4 ${error ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+          {error || successMessage}
+        </div>
+      )}
       
       {/* Onglets */}
       <div className="bg-gray-50 px-6 py-2 border-b">
@@ -477,14 +609,25 @@ const DispoSalon = () => {
         <div className="mt-6 flex justify-end">
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 flex items-center"
+            disabled={isSaving}
           >
-            Enregistrer les modifications
+            {isSaving ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Enregistrement...
+              </>
+            ) : (
+              'Enregistrer les modifications'
+            )}
           </button>
         </div>
       </div>
     </div>
-  );
-};
-
-export default DispoSalon;
+    );
+  };
+  
+  export default DispoSalon;

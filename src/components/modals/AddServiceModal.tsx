@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
 
 interface ServiceData {
   title: string;
@@ -10,9 +12,10 @@ interface ServiceData {
 interface AddServiceModalProps {
   onClose: () => void;
   onSubmit: (serviceData: ServiceData) => void;
+  sectionId: string; // ID de la section à laquelle le service appartient
 }
 
-const AddServiceModal = ({ onClose, onSubmit }: AddServiceModalProps) => {
+const AddServiceModal = ({ onClose, onSubmit, sectionId }: AddServiceModalProps) => {
   const [serviceData, setServiceData] = useState<ServiceData>({
     title: '',
     description: '',
@@ -21,6 +24,7 @@ const AddServiceModal = ({ onClose, onSubmit }: AddServiceModalProps) => {
   });
   
   const [errors, setErrors] = useState<Partial<Record<keyof ServiceData, string>>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -41,7 +45,7 @@ const AddServiceModal = ({ onClose, onSubmit }: AddServiceModalProps) => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validation
@@ -64,11 +68,35 @@ const AddServiceModal = ({ onClose, onSubmit }: AddServiceModalProps) => {
       return;
     }
     
-    onSubmit({
-      ...serviceData,
-      title: serviceData.title.trim(),
-      description: serviceData.description.trim()
-    });
+    try {
+      setIsSubmitting(true);
+      
+      // Préparation des données à enregistrer
+      const serviceToAdd = {
+        title: serviceData.title.trim(),
+        description: serviceData.description.trim(),
+        duration: serviceData.duration,
+        price: serviceData.price,
+        sectionId: sectionId,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+      
+      // Ajout à Firestore
+      const servicesRef = collection(db, 'services');
+      await addDoc(servicesRef, serviceToAdd);
+      
+      // Succès - notifier le parent et fermer
+      onSubmit(serviceData);
+    } catch (err) {
+      console.error("Erreur lors de l'ajout du service:", err);
+      setErrors({ 
+        ...errors, 
+        title: "Une erreur est survenue lors de l'enregistrement" 
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -92,9 +120,9 @@ const AddServiceModal = ({ onClose, onSubmit }: AddServiceModalProps) => {
                   name="title"
                   value={serviceData.title}
                   onChange={handleChange}
-                  className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500
-"
+                  className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500"
                   placeholder="Ex: Coupe femme, Balayage..."
+                  disabled={isSubmitting}
                 />
                 {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
               </div>
@@ -110,9 +138,9 @@ const AddServiceModal = ({ onClose, onSubmit }: AddServiceModalProps) => {
                   rows={3}
                   value={serviceData.description}
                   onChange={handleChange}
-                  className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500
-"
+                  className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500"
                   placeholder="Décrivez brièvement ce service..."
+                  disabled={isSubmitting}
                 />
               </div>
               
@@ -130,8 +158,8 @@ const AddServiceModal = ({ onClose, onSubmit }: AddServiceModalProps) => {
                     step="5"
                     value={serviceData.duration}
                     onChange={handleChange}
-                    className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500
-"
+                    className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500"
+                    disabled={isSubmitting}
                   />
                   {errors.duration && <p className="mt-1 text-sm text-red-600">{errors.duration}</p>}
                 </div>
@@ -148,8 +176,8 @@ const AddServiceModal = ({ onClose, onSubmit }: AddServiceModalProps) => {
                     step="0.5"
                     value={serviceData.price}
                     onChange={handleChange}
-                    className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500
-"
+                    className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500"
+                    disabled={isSubmitting}
                   />
                   {errors.price && <p className="mt-1 text-sm text-red-600">{errors.price}</p>}
                 </div>
@@ -162,14 +190,26 @@ const AddServiceModal = ({ onClose, onSubmit }: AddServiceModalProps) => {
               type="button"
               onClick={onClose}
               className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              disabled={isSubmitting}
             >
               Annuler
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 flex items-center"
+              disabled={isSubmitting}
             >
-              Ajouter
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Ajout en cours...
+                </>
+              ) : (
+                'Ajouter'
+              )}
             </button>
           </div>
         </form>
