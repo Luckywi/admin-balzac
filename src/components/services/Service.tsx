@@ -253,7 +253,7 @@ const loadData = async () => {
             <p className="text-gray-600 mb-4">{error}</p>
             <button 
               onClick={loadData}
-              className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
+              className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             >
               Réessayer
             </button>
@@ -281,7 +281,7 @@ const loadData = async () => {
         {sections.length > 0 ? (
           <div className="space-y-6">
             {sections.map(section => (
-              <div key={section.id} className="border border-gray-900 rounded-lg overflow-hidden">
+              <div key={section.id} className="border border-gray-200 rounded-lg overflow-hidden">
                 {/* En-tête de section */}
                 <div 
                   className="bg-gray-50 px-6 py-4 flex justify-between items-center cursor-pointer"
@@ -290,7 +290,7 @@ const loadData = async () => {
                   <div className="flex items-center">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className={`h-5 w-5 text-gray-900 mr-2 transition-transform ${section.isOpen ? 'transform rotate-90' : ''}`}
+                      className={`h-5 w-5 text-gray-500 mr-2 transition-transform ${section.isOpen ? 'transform rotate-90' : ''}`}
                       viewBox="0 0 20 20"
                       fill="currentColor"
                     >
@@ -308,7 +308,7 @@ const loadData = async () => {
                         e.stopPropagation();
                         openEditSectionModal(section.id);
                       }}
-                      className="p-1 text-gray-900 hover:text-gray-900 focus:outline-none"
+                      className="p-1 text-gray-500 hover:text-gray-900 focus:outline-none"
                       title="Modifier la section"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -332,7 +332,7 @@ const loadData = async () => {
                         e.stopPropagation();
                         openAddServiceModal(section.id);
                       }}
-                      className="px-3 py-1 text-xs bg-gray-900 text-white rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
+                      className="px-3 py-1 text-xs bg-gray-900 text-white rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                     >
                       Ajouter un service
                     </button>
@@ -347,14 +347,14 @@ const loadData = async () => {
                         {section.services.map(service => (
                           <div 
                             key={service.id} 
-                            className="border border-gray-900 rounded-lg p-4 hover:shadow-md transition-shadow"
+                            className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                           >
                             <div className="flex justify-between items-start mb-2">
                               <h4 className="font-medium text-gray-900">{service.title}</h4>
                               <div className="flex space-x-2">
                                 <button
                                   onClick={() => openEditServiceModal(section.id, service.id)}
-                                  className="p-1 text-gray-900 hover:text-gray-900 focus:outline-none"
+                                  className="p-1 text-gray-500 hover:text-gray-900 focus:outline-none"
                                   title="Modifier le service"
                                 >
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -374,7 +374,7 @@ const loadData = async () => {
                             </div>
                             <p className="text-gray-600 text-sm mb-2">{service.description}</p>
                             <div className="flex justify-between items-center mt-4">
-                              <span className="text-gray-900 text-sm">
+                              <span className="text-gray-500 text-sm">
                                 {formatDuration(service.duration)}
                               </span>
                               <span className="font-bold text-gray-900">
@@ -385,7 +385,7 @@ const loadData = async () => {
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-6 text-gray-900">
+                      <div className="text-center py-6 text-gray-500">
                         Aucun service dans cette section
                       </div>
                     )}
@@ -395,7 +395,7 @@ const loadData = async () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-10 text-gray-900">
+          <div className="text-center py-10 text-gray-500">
             <p>Aucune section de service configurée</p>
             <p className="mt-2">Cliquez sur "Ajouter une section" pour commencer</p>
           </div>

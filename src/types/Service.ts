@@ -7,10 +7,10 @@ export interface ServiceSection {
   
   export interface Service {
     id: string;
-    title: string; // Nom du service, ex : "Balayage"
-    description?: string; // Description optionnelle
-    duration: number; // en minutes
-    price: number; // en euros
-    section: ServiceSection; // catégorie du service
+    title: string;
+  description: string;
+  duration: string; // au lieu de number
+  price: string;    // aussi string si tu veux l’éditer en mode formulaire
+  sectionId?: string;
   }
   
