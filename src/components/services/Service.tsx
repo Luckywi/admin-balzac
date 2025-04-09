@@ -9,13 +9,21 @@ import EditSectionModal from '../modals/EditSectionModal';
 import AddServiceModal from '../modals/AddServiceModal';
 import EditServiceModal from '../modals/EditServiceModal';
 
+// Adaptation de l'interface pour refléter les types utilisés dans les modales
 interface ServiceItem {
   id: string;
   title: string;
   description: string;
-  duration: number;
-  price: number;
+  duration: number; // Reste un number en interne
+  price: number;    // Reste un number en interne
   sectionId: string;
+}
+
+interface ServiceData {
+  title: string;
+  description: string;
+  duration: string; // Format HH:mm pour les formulaires
+  price: string;    // String pour les formulaires
 }
 
 interface ServiceSection {
@@ -43,8 +51,7 @@ const Service = () => {
   }, []);
   
   // Charger les données depuis Firestore
-  // Charger les données depuis Firestore
-const loadData = async () => {
+  const loadData = async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -67,8 +74,8 @@ const loadData = async () => {
             id: doc.id,
             title: doc.data().title,
             description: doc.data().description || '',
-            duration: doc.data().duration || 30,
-            price: doc.data().price || 0,
+            duration: doc.data().duration || 30, // Stocké comme number dans Firestore
+            price: doc.data().price || 0,        // Stocké comme number dans Firestore
             sectionId: doc.data().sectionId
           }));
           
@@ -160,14 +167,14 @@ const loadData = async () => {
   };
 
   // Fonctions pour les services
-  const handleAddService = (serviceData: Omit<ServiceItem, 'id' | 'sectionId'>) => {
+  const handleAddService = (serviceData: ServiceData) => {
     // Le service est déjà ajouté à Firebase par AddServiceModal
     // On ferme juste la modale, le reste est géré par l'abonnement Firestore
     setIsAddServiceModalOpen(false);
     setCurrentSectionId(null);
   };
   
-  const handleEditService = (serviceData: Omit<ServiceItem, 'id' | 'sectionId'>) => {
+  const handleEditService = (serviceData: ServiceData) => {
     // Cette fonction est appelée par EditServiceModal après la mise à jour dans Firebase
     setIsEditServiceModalOpen(false);
     setCurrentSectionId(null);
@@ -213,6 +220,20 @@ const loadData = async () => {
         ? `${hours}h${remainingMinutes.toString().padStart(2, '0')}`
         : `${hours}h`;
     }
+  };
+
+  // Convertir un ServiceItem en ServiceData pour l'édition
+  const serviceItemToData = (item: ServiceItem): ServiceData => {
+    // Convertir les minutes en format HH:mm
+    const hours = Math.floor(item.duration / 60).toString().padStart(2, '0');
+    const minutes = (item.duration % 60).toString().padStart(2, '0');
+    
+    return {
+      title: item.title,
+      description: item.description,
+      duration: `${hours}:${minutes}`,
+      price: item.price.toString()
+    };
   };
 
   // Afficher un indicateur de chargement
@@ -442,6 +463,7 @@ const loadData = async () => {
           }}
           onSubmit={handleEditService}
           currentService={
+            // On utilise les données brutes du service tel que stocké dans Firestore
             sections
               .find(s => s.id === currentSectionId)
               ?.services.find(serv => serv.id === currentServiceId) || 

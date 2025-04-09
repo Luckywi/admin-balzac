@@ -8,6 +8,7 @@ export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('calendar'); // Options: 'calendar', 'clients', 'services'
   const [isRdvModalOpen, setIsRdvModalOpen] = useState(false);
+  const [staffFilter, setStaffFilter] = useState<string | undefined>(undefined);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -36,6 +37,11 @@ export default function Dashboard() {
     };
   }, [isSidebarOpen]);
 
+  // Fonction pour filtrer les rendez-vous par coiffeur
+  const handleStaffFilter = (staffId: string | undefined) => {
+    setStaffFilter(staffId === staffFilter ? undefined : staffId);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <Header onToggleSidebar={toggleSidebar} />
@@ -60,18 +66,28 @@ export default function Dashboard() {
               {/* Boutons pour filtrer par coiffeur */}
               <div className="flex justify-center space-x-4 mb-6">
                 <button
-                  className="px-5 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700"
+                  onClick={() => handleStaffFilter('bea')}
+                  className={`px-5 py-2 ${staffFilter === 'bea' ? 'bg-green-700' : 'bg-gray-900'} text-white rounded-md hover:bg-gray-800 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700`}
                 >
-                  Béatrice
+                  Béatrice {staffFilter === 'bea' && '✓'}
                 </button>
                 <button
-                  className="px-5 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700"
+                  onClick={() => handleStaffFilter('cyrille')}
+                  className={`px-5 py-2 ${staffFilter === 'cyrille' ? 'bg-blue-700' : 'bg-gray-900'} text-white rounded-md hover:bg-gray-800 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700`}
                 >
-                  Cyrille
+                  Cyrille {staffFilter === 'cyrille' && '✓'}
                 </button>
+                {staffFilter && (
+                  <button
+                    onClick={() => setStaffFilter(undefined)}
+                    className="px-5 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  >
+                    Réinitialiser
+                  </button>
+                )}
               </div>
               
-              <Calendar />
+              <Calendar staffFilter={staffFilter} />
             </div>
           )}
           
