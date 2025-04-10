@@ -52,7 +52,7 @@ export default function LoginPage() {
           alt="Le Balzac Logo" 
           className="w-32 h-auto mb-6"
         />
-        <h1 className="text-2xl font-semibold">Entrer le code</h1>
+        <h1 className="text-2xl text-white font-semibold">Entrer le code</h1>
       </div>
 
       {/* Points du code PIN */}
