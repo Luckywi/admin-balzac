@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import logo from '@/assets/le-balzac-logo.png';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -31,7 +32,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         {/* Logo */}
         <div className="flex items-center justify-center">
           <img 
-            src="src/assets/le-balzac-logo.png" 
+            src={logo} 
             alt="Le Balzac Logo" 
             className="h-10 md:h-12"
           />

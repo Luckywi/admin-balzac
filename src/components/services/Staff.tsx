@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import DispoStaff from '../modals/DispoStaff';
+import cyrille from '@/assets/cyrille.png';
+import bea from '@/assets/bea.png';
 
 interface StaffMember {
   id: string;
@@ -16,12 +18,12 @@ const Staff = () => {
     {
       id: 'bea',
       name: 'Béa',
-      imageUrl: 'src/assets/bea.png' // Image placeholder temporaire
+      imageUrl: bea // ✅ on utilise directement l'import
     },
     {
       id: 'cyrille',
       name: 'Cyrille',
-      imageUrl: 'src/assets/cyrille.png' // Image placeholder temporaire
+      imageUrl: cyrille // ✅ pareil ici
     }
   ];
 

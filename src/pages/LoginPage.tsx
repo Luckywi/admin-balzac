@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import logo from '@/assets/le-balzac-logo.png'
 
 const CORRECT_PIN = '1234' // à remplacer plus tard par un système Firebase ou admin
 
@@ -48,10 +49,11 @@ export default function LoginPage() {
       {/* Logo et titre */}
       <div className="flex flex-col items-center mb-8">
         <img 
-          src="src/assets/le-balzac-logo.png"
-          alt="Le Balzac Logo" 
-          className="w-32 h-auto mb-6"
-        />
+  src={logo}
+  alt="Le Balzac Logo" 
+  className="w-32 h-auto mb-6"
+/>
+
         <h1 className="text-2xl text-white font-semibold">Entrer le code</h1>
       </div>
 
