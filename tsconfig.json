@@ -1,15 +1,21 @@
 {
-    "compilerOptions": {
-      "target": "ESNext",
-      "module": "ESNext",
-      "lib": ["DOM", "ESNext"],
-      "jsx": "react-jsx",
-      "moduleResolution": "Node",
-      "strict": true,
-      "esModuleInterop": true,
-      "skipLibCheck": true,
-      "forceConsistentCasingInFileNames": true,
-      "typeRoots": ["./node_modules/@types", "./types"]
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["DOM", "ESNext"],
+    "jsx": "react-jsx",
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"]
     },
-    "include": ["src", "types"]
-  }
+
+    "typeRoots": ["./node_modules/@types", "./types"]
+  },
+  "include": ["src", "types"]
+}

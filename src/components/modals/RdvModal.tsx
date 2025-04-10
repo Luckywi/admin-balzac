@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs, query, where, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { isWithinInterval } from 'date-fns';
 
 interface RdvModalProps {
   isOpen: boolean;
@@ -27,6 +28,37 @@ interface StaffMember {
   name: string;
 }
 
+interface WorkHours {
+  start: string;
+  end: string;
+}
+
+interface Break {
+  id: string;
+  day: string;
+  start: string;
+  end: string;
+}
+
+interface Vacation {
+  id: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+}
+
+interface SalonConfig {
+  workDays: Record<string, boolean>;
+  workHours: Record<string, WorkHours>;
+  breaks: Break[];
+  vacations: Vacation[];
+  updatedAt: any;
+}
+
+const DAYS_OF_WEEK = [
+  'Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'
+];
+
 const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
   const [formData, setFormData] = useState({
     clientName: '',
@@ -48,15 +80,40 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
   // États pour le menu déroulant
   const [openSectionId, setOpenSectionId] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+  
+  // État pour la configuration du salon
+  const [salonConfig, setSalonConfig] = useState<SalonConfig | null>(null);
+  
+  // Validation du créneau
+  const [timeError, setTimeError] = useState<string | null>(null);
 
   // Charger les sections et services au chargement de la modale
   useEffect(() => {
     if (isOpen) {
       loadSectionsAndServices();
       loadStaffMembers();
+      loadSalonConfig();
       console.log("Chargement des sections, services et coiffeurs...");
     }
   }, [isOpen]);
+  
+  // Charger la configuration du salon
+  const loadSalonConfig = async () => {
+    try {
+      // Récupérer la configuration du salon depuis Firestore
+      const docRef = doc(db, 'salon', 'config');
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data() as SalonConfig;
+        setSalonConfig(data);
+      } else {
+        console.log("Aucune configuration de salon trouvée");
+      }
+    } catch (err) {
+      console.error("Erreur lors du chargement de la configuration du salon:", err);
+    }
+  };
 
   const loadSectionsAndServices = async () => {
     try {
@@ -120,6 +177,11 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
       ...formData,
       [name]: value
     });
+    
+    // Réinitialiser l'erreur de temps si on change la date ou l'heure
+    if (name === 'date' || name === 'time') {
+      setTimeError(null);
+    }
   };
 
   const handleSelectService = (service: Service) => {
@@ -138,12 +200,96 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
   const getServicesForSection = (sectionId: string) => {
     return services.filter(service => service.sectionId === sectionId);
   };
+  
+  // Vérifier si une date est un jour de fermeture du salon
+  const isSalonClosed = (date: Date): boolean => {
+    if (!salonConfig) return false;
+    
+    // Vérifier si c'est un jour de fermeture hebdomadaire
+    const dayOfWeek = DAYS_OF_WEEK[date.getDay()];
+    if (!salonConfig.workDays[dayOfWeek]) {
+      return true;
+    }
+    
+    // Vérifier si c'est un jour de fermeture exceptionnel (vacances)
+    const vacationClosed = salonConfig.vacations.some(vacation => {
+      const startDate = new Date(vacation.startDate);
+      const endDate = new Date(vacation.endDate);
+      endDate.setHours(23, 59, 59, 999); // Inclure le jour de fin complet
+      
+      return isWithinInterval(date, { start: startDate, end: endDate });
+    });
+    
+    return vacationClosed;
+  };
+  
+  // Vérifier si l'heure est en dehors des heures d'ouverture
+  const isOutsideBusinessHours = (date: Date, endDate: Date): boolean => {
+    if (!salonConfig) return false;
+    
+    const dayOfWeek = DAYS_OF_WEEK[date.getDay()];
+    const dayHours = salonConfig.workHours[dayOfWeek];
+    
+    if (!dayHours) return true;
+    
+    const timeString = (d: Date) => {
+      return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+    };
+    
+    const startTime = timeString(date);
+    const endTime = timeString(endDate);
+    
+    // Vérifier si l'heure de début est avant l'ouverture ou l'heure de fin après la fermeture
+    if (startTime < dayHours.start || endTime > dayHours.end) {
+      return true;
+    }
+    
+    // Vérifier si pendant une pause
+    return salonConfig.breaks.some(breakItem => {
+      if (breakItem.day === dayOfWeek) {
+        // Vérifier si le RDV chevauche une pause
+        return (startTime >= breakItem.start && startTime < breakItem.end) || 
+               (endTime > breakItem.start && endTime <= breakItem.end) ||
+               (startTime <= breakItem.start && endTime >= breakItem.end);
+      }
+      return false;
+    });
+  };
+
+  const validateAppointmentTime = (): string | null => {
+    if (!formData.date || !formData.time || !selectedService) {
+      return "Veuillez sélectionner une date, une heure et un service";
+    }
+    
+    // Créer des objets Date pour le début et la fin du RDV
+    const startDateTime = new Date(`${formData.date}T${formData.time}`);
+    const endDateTime = new Date(startDateTime.getTime() + selectedService.duration * 60000);
+    
+    // Vérifier si c'est un jour fermé
+    if (isSalonClosed(startDateTime)) {
+      return "Le salon est fermé à cette date";
+    }
+    
+    // Vérifier si c'est en dehors des heures d'ouverture ou pendant une pause
+    if (isOutsideBusinessHours(startDateTime, endDateTime)) {
+      return "Ce créneau est en dehors des heures d'ouverture ou pendant une pause";
+    }
+    
+    return null;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.clientName || !selectedService || !formData.date || !formData.time || !formData.staffId) {
       setError("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+    
+    // Vérifier la validité du créneau
+    const validationError = validateAppointmentTime();
+    if (validationError) {
+      setTimeError(validationError);
       return;
     }
     
@@ -392,6 +538,15 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                     required
                   />
                 </div>
+                
+                {timeError && (
+                  <div className="col-span-2">
+                    <p className="text-sm text-red-600">{timeError}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Veuillez choisir un créneau pendant les heures d'ouverture du salon
+                    </p>
+                  </div>
+                )}
               </div>
               
               {/* Champ de notes */}
