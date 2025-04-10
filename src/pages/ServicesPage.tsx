@@ -37,7 +37,8 @@ export default function ServicesPage() {
   }, [isSidebarOpen]);
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen bg-gray-300 flex flex-col">
+
       <Header onToggleSidebar={toggleSidebar} />
       <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} onTabChange={handleTabChange} activeTab={activeTab} />
       

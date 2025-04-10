@@ -198,7 +198,7 @@ const RdvDetailsModal: React.FC<RdvDetailsModalProps> = ({ event, onClose, onRef
                   <div className="flex space-x-3">
                     <button
                       onClick={() => setConfirmDelete(false)}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                      className="px-4 py-2 border border-gray-900 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
                       disabled={isDeleting}
                     >
                       Non

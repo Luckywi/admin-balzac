@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
+import { Label } from "../ui/label";
+import { Button } from "../ui/button";
+import { Loader2 } from "lucide-react";
 
 interface ServiceData {
   title: string;
@@ -96,37 +101,43 @@ const AddServiceModal = ({ onClose, onSubmit, sectionId }: AddServiceModalProps)
 
         <form onSubmit={handleSubmit}>
           <div className="p-6 space-y-4">
-            <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Titre du service <span className="text-red-500">*</span></label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="title" className="text-sm font-medium text-gray-700">
+                Titre du service <span className="text-red-500">*</span>
+              </Label>
+              <Input
                 type="text"
                 id="title"
                 name="title"
                 value={serviceData.title}
                 onChange={handleChange}
-                className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
+                className="w-full border border-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-0 focus:border-gray-900"
                 placeholder="Ex: Coupe femme, Balayage..."
                 disabled={isSubmitting}
               />
               {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
             </div>
 
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-sm font-medium text-gray-700">
+                Description
+              </Label>
+              <Textarea
                 id="description"
                 name="description"
                 rows={3}
                 value={serviceData.description}
                 onChange={handleChange}
-                className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
+                className="w-full min-h-[80px] border border-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-0 focus:border-gray-900"
                 placeholder="Décrivez brièvement ce service..."
                 disabled={isSubmitting}
               />
             </div>
 
-            <div>
-              <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-1">Durée <span className="text-red-500">*</span></label>
+            <div className="space-y-2">
+              <Label htmlFor="duration" className="text-sm font-medium text-gray-700">
+                Durée <span className="text-red-500">*</span>
+              </Label>
               <input
                 type="time"
                 id="duration"
@@ -134,21 +145,23 @@ const AddServiceModal = ({ onClose, onSubmit, sectionId }: AddServiceModalProps)
                 step="300"
                 value={serviceData.duration}
                 onChange={handleChange}
-                className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
+                className="w-full bg-white px-3 py-2 border border-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
                 disabled={isSubmitting}
               />
               {errors.duration && <p className="mt-1 text-sm text-red-600">{errors.duration}</p>}
             </div>
 
-            <div>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">Prix (€) <span className="text-red-500">*</span></label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="price" className="text-sm font-medium text-gray-700">
+                Prix (€) <span className="text-red-500">*</span>
+              </Label>
+              <Input
                 type="text"
                 id="price"
                 name="price"
                 value={serviceData.price}
                 onChange={handleChange}
-                className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
+                className="w-full border border-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-0 focus:border-gray-900"
                 disabled={isSubmitting}
               />
               {errors.price && <p className="mt-1 text-sm text-red-600">{errors.price}</p>}
@@ -159,17 +172,24 @@ const AddServiceModal = ({ onClose, onSubmit, sectionId }: AddServiceModalProps)
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
+              className="px-4 py-2 border border-gray-900 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-0"
               disabled={isSubmitting}
             >
               Annuler
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
+              className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-0"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Ajout en cours...' : 'Ajouter'}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Ajout en cours...
+                </>
+              ) : (
+                'Ajouter'
+              )}
             </button>
           </div>
         </form>

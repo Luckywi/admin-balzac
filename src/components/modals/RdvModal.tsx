@@ -570,7 +570,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                       name="clientName"
                       value={formData.clientName}
                       onChange={handleChange}
-                      className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
+                      className="w-full bg-white px-3 py-2 border border-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
                       placeholder="Nom et prénom"
                       required
                     />
@@ -587,7 +587,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                         name="clientPhone"
                         value={formData.clientPhone}
                         onChange={handleChange}
-                        className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
+                        className="w-full bg-white px-3 py-2 border border-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
                         placeholder="0612345678"
                       />
                     </div>
@@ -600,7 +600,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Service *
                     </label>
-                    <div className="border border-gray-300 rounded-md overflow-hidden">
+                    <div className="border border-gray-900 rounded-md overflow-hidden">
                       {selectedService ? (
                         <div 
                           className="p-3 flex justify-between items-center bg-gray-50 cursor-pointer"
@@ -623,7 +623,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                         </div>
                       ) : (
                         sections.map(section => (
-                          <div key={section.id} className="border-b border-gray-300 last:border-b-0">
+                          <div key={section.id} className="border-b border-gray-900 last:border-b-0">
                             <div 
                               className="p-3 flex justify-between items-center bg-gray-50 cursor-pointer hover:bg-gray-100"
                               onClick={() => toggleSection(section.id)}
@@ -641,7 +641,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                             </div>
                             
                             {openSectionId === section.id && (
-                              <div className="border-t border-gray-300">
+                              <div className="border-t border-gray-900">
                                 {getServicesForSection(section.id).map(service => (
                                   <div
                                     key={service.id}
@@ -680,7 +680,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                       name="staffId"
                       value={formData.staffId}
                       onChange={handleChange}
-                      className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
+                      className="w-full bg-white px-3 py-2 border border-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
                       required
                     >
                       <option value="" disabled>Sélectionnez un coiffeur</option>
@@ -706,7 +706,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Date *
                     </label>
-                    <div className="border border-gray-300 rounded-md overflow-hidden">
+                    <div className="border border-gray-900 rounded-md overflow-hidden">
                       <Calendar
                         mode="single"
                         selected={selectedDate}
@@ -778,7 +778,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                       value={formData.notes}
                       onChange={handleChange}
                       rows={3}
-                      className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
+                      className="w-full bg-white px-3 py-2 border border-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
                       placeholder="Notes supplémentaires (optionnel)"
                     />
                   </div>
@@ -786,7 +786,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                 
                 {/* Récapitulatif du rendez-vous */}
                 {step >= 6 && selectedService && formData.time && (
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-300 mt-4">
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-900 mt-4">
                     <h4 className="text-base font-medium text-gray-900 mb-3">Récapitulatif du rendez-vous</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">

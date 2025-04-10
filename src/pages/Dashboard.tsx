@@ -43,7 +43,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen bg-gray-300 flex flex-col">
       <Header onToggleSidebar={toggleSidebar} />
       <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} onTabChange={handleTabChange} activeTab={activeTab} />
       
@@ -51,7 +51,6 @@ export default function Dashboard() {
         <div className="container mx-auto">
           {activeTab === 'calendar' && (
             <div className="mb-6">
-              <h1 className="text-2xl font-bold mb-4">Calendrier des rendez-vous</h1>
               
               {/* Bouton de création de RDV */}
               <div className="flex justify-center mb-6">

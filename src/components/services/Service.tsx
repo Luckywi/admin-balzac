@@ -8,22 +8,39 @@ import AddSectionModal from '../modals/AddSectionModal';
 import EditSectionModal from '../modals/EditSectionModal';
 import AddServiceModal from '../modals/AddServiceModal';
 import EditServiceModal from '../modals/EditServiceModal';
+import { Button } from '@/components/ui/button';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter,
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { PlusCircle, Edit, Trash2, Scissors } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
 
-// Adaptation de l'interface pour refléter les types utilisés dans les modales
+// Interfaces existantes
 interface ServiceItem {
   id: string;
   title: string;
   description: string;
-  duration: number; // Reste un number en interne
-  price: number;    // Reste un number en interne
+  duration: number;
+  price: number;
   sectionId: string;
 }
 
 interface ServiceData {
   title: string;
   description: string;
-  duration: string; // Format HH:mm pour les formulaires
-  price: string;    // String pour les formulaires
+  duration: string;
+  price: string;
 }
 
 interface ServiceSection {
@@ -74,8 +91,8 @@ const Service = () => {
             id: doc.id,
             title: doc.data().title,
             description: doc.data().description || '',
-            duration: doc.data().duration || 30, // Stocké comme number dans Firestore
-            price: doc.data().price || 0,        // Stocké comme number dans Firestore
+            duration: doc.data().duration || 30,
+            price: doc.data().price || 0,
             sectionId: doc.data().sectionId
           }));
           
@@ -116,13 +133,10 @@ const Service = () => {
   
   // Fonctions pour les sections
   const handleAddSection = (title: string) => {
-    // La section est déjà ajoutée à Firebase par AddSectionModal
-    // Ici on ferme juste la modale, le reste est géré par l'abonnement Firestore
     setIsAddSectionModalOpen(false);
   };
   
   const handleEditSection = async (id: string, title: string) => {
-    // Cette fonction est appelée par EditSectionModal après la mise à jour dans Firebase
     setIsEditSectionModalOpen(false);
     setCurrentSectionId(null);
   };
@@ -159,23 +173,14 @@ const Service = () => {
     setCurrentSectionId(sectionId);
     setIsEditSectionModalOpen(true);
   };
-  
-  const toggleSection = (sectionId: string) => {
-    setSections(sections.map(section =>
-      section.id === sectionId ? { ...section, isOpen: !section.isOpen } : section
-    ));
-  };
 
   // Fonctions pour les services
   const handleAddService = (serviceData: ServiceData) => {
-    // Le service est déjà ajouté à Firebase par AddServiceModal
-    // On ferme juste la modale, le reste est géré par l'abonnement Firestore
     setIsAddServiceModalOpen(false);
     setCurrentSectionId(null);
   };
   
   const handleEditService = (serviceData: ServiceData) => {
-    // Cette fonction est appelée par EditServiceModal après la mise à jour dans Firebase
     setIsEditServiceModalOpen(false);
     setCurrentSectionId(null);
     setCurrentServiceId(null);
@@ -222,20 +227,6 @@ const Service = () => {
     }
   };
 
-  // Convertir un ServiceItem en ServiceData pour l'édition
-  const serviceItemToData = (item: ServiceItem): ServiceData => {
-    // Convertir les minutes en format HH:mm
-    const hours = Math.floor(item.duration / 60).toString().padStart(2, '0');
-    const minutes = (item.duration % 60).toString().padStart(2, '0');
-    
-    return {
-      title: item.title,
-      description: item.description,
-      duration: `${hours}:${minutes}`,
-      price: item.price.toString()
-    };
-  };
-
   // Afficher un indicateur de chargement
   if (isLoading) {
     return (
@@ -272,12 +263,13 @@ const Service = () => {
             </div>
             <p className="text-gray-900 font-medium mb-2">Erreur de chargement</p>
             <p className="text-gray-600 mb-4">{error}</p>
-            <button 
+            <Button 
               onClick={loadData}
-              className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              variant="default"
+              className="bg-gray-900 hover:bg-gray-700"
             >
               Réessayer
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -289,136 +281,138 @@ const Service = () => {
       {/* En-tête */}
       <div className="bg-gray-900 px-6 py-4 flex justify-between items-center">
         <h2 className="text-xl font-semibold text-white">Services proposés</h2>
-        <button
+        <Button 
           onClick={() => setIsAddSectionModalOpen(true)}
-          className="px-4 py-2 bg-white text-gray-900 rounded-md hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white"
+          variant="secondary"
+          className="bg-white text-gray-900 hover:bg-gray-100"
         >
+          <PlusCircle className="mr-2 h-4 w-4" />
           Ajouter une section
-        </button>
+        </Button>
       </div>
       
       {/* Contenu */}
       <div className="p-6">
         {sections.length > 0 ? (
           <div className="space-y-6">
-            {sections.map(section => (
-              <div key={section.id} className="border border-gray-900 rounded-lg overflow-hidden">
-                {/* En-tête de section */}
-                <div 
-                  className="bg-gray-50 px-6 py-4 flex justify-between items-center cursor-pointer"
-                  onClick={() => toggleSection(section.id)}
+            <Accordion type="multiple" defaultValue={sections.map(s => s.id)} className="space-y-4">
+              {sections.map(section => (
+                <AccordionItem 
+                  key={section.id} 
+                  value={section.id}
+                  className="border border-gray-900 rounded-lg overflow-hidden"
                 >
-                  <div className="flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className={`h-5 w-5 text-gray-500 mr-2 transition-transform ${section.isOpen ? 'transform rotate-90' : ''}`}
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <h3 className="font-medium text-lg text-gray-900">{section.title}</h3>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openEditSectionModal(section.id);
-                      }}
-                      className="p-1 text-gray-500 hover:text-gray-900 focus:outline-none"
-                      title="Modifier la section"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteSection(section.id);
-                      }}
-                      className="p-1 text-red-500 hover:text-red-700 focus:outline-none"
-                      title="Supprimer la section"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openAddServiceModal(section.id);
-                      }}
-                      className="px-3 py-1 text-xs bg-gray-900 text-white rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-                    >
-                      Ajouter un service
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Contenu de la section (services) */}
-                {section.isOpen && (
-                  <div className="p-6">
-                    {section.services.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {section.services.map(service => (
-                          <div 
-                            key={service.id} 
-                            className="border border-gray-900 rounded-lg p-4 hover:shadow-md transition-shadow"
+                  <AccordionTrigger 
+                    className="px-6 py-4 bg-gray-50 hover:bg-gray-100 flex justify-between items-center text-left"
+                  >
+                    <div className="font-medium text-lg text-gray-900">{section.title}</div>
+                  </AccordionTrigger>
+                  <AccordionContent className="p-0">
+                    <div className="border-t border-gray-900 p-4">
+                      <div className="flex justify-between mb-4">
+                        <div className="flex space-x-2">
+                          <Button
+                            onClick={() => openEditSectionModal(section.id)}
+                            variant="outline"
+                            size="sm"
+                            className="border-gray-900"
                           >
-                            <div className="flex justify-between items-start mb-2">
-                              <h4 className="font-medium text-gray-900">{service.title}</h4>
-                              <div className="flex space-x-2">
-                                <button
-                                  onClick={() => openEditServiceModal(section.id, service.id)}
-                                  className="p-1 text-gray-500 hover:text-gray-900 focus:outline-none"
-                                  title="Modifier le service"
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                  </svg>
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteService(service.id)}
-                                  className="p-1 text-red-500 hover:text-red-700 focus:outline-none"
-                                  title="Supprimer le service"
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                  </svg>
-                                </button>
-                              </div>
-                            </div>
-                            <p className="text-gray-600 text-sm mb-2">{service.description}</p>
-                            <div className="flex justify-between items-center mt-4">
-                              <span className="text-gray-500 text-sm">
-                                {formatDuration(service.duration)}
-                              </span>
-                              <span className="font-bold text-gray-900">
-                                {formatPrice(service.price)}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
+                            <Edit className="h-4 w-4 mr-1" />
+                            Modifier
+                          </Button>
+                          <Button
+                            onClick={() => handleDeleteSection(section.id)}
+                            variant="destructive"
+                            size="sm"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Supprimer
+                          </Button>
+                        </div>
+                        <Button
+                          onClick={() => openAddServiceModal(section.id)}
+                          variant="default"
+                          size="sm"
+                          className="bg-gray-900 hover:bg-gray-700"
+                        >
+                          <PlusCircle className="h-4 w-4 mr-1" />
+                          Ajouter un service
+                        </Button>
                       </div>
-                    ) : (
-                      <div className="text-center py-6 text-gray-500">
-                        Aucun service dans cette section
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
+                      
+                      {section.services.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                          {section.services.map(service => (
+                            <Card 
+                              key={service.id} 
+                              className="border border-gray-900 hover:shadow-md transition-shadow"
+                            >
+                              <CardHeader className="p-4 pb-2">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <CardTitle className="text-base font-medium text-gray-900">{service.title}</CardTitle>
+                                    {service.description && (
+                                      <CardDescription className="text-sm text-gray-600 mt-1">
+                                        {service.description}
+                                      </CardDescription>
+                                    )}
+                                  </div>
+                                  <div className="flex space-x-1">
+                                    <Button
+                                      onClick={() => openEditServiceModal(section.id, service.id)}
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0"
+                                    >
+                                      <Edit className="h-4 w-4 text-gray-500 hover:text-gray-900" />
+                                    </Button>
+                                    <Button
+                                      onClick={() => handleDeleteService(service.id)}
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0"
+                                    >
+                                      <Trash2 className="h-4 w-4 text-red-500 hover:text-red-700" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </CardHeader>
+                              <CardFooter className="p-4 pt-2 flex justify-between items-center">
+                                <Badge variant="outline" className="bg-gray-50 text-gray-700 flex items-center gap-1">
+                                  <Scissors className="h-3 w-3" />
+                                  {formatDuration(service.duration)}
+                                </Badge>
+                                <span className="font-bold text-gray-900">
+                                  {formatPrice(service.price)}
+                                </span>
+                              </CardFooter>
+                            </Card>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-6 bg-gray-50 rounded-lg mt-4 text-gray-500">
+                          Aucun service dans cette section
+                        </div>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
           </div>
         ) : (
           <div className="text-center py-10 text-gray-500">
-            <p>Aucune section de service configurée</p>
-            <p className="mt-2">Cliquez sur "Ajouter une section" pour commencer</p>
+            <Scissors className="h-12 w-12 mx-auto mb-4 text-gray-900" />
+            <p className="text-lg font-medium mb-2">Aucune section configurée</p>
+            <p className="mb-6">Commencez par ajouter une section pour organiser vos services</p>
+            <Button
+              onClick={() => setIsAddSectionModalOpen(true)}
+              variant="default"
+              className="bg-gray-900 hover:bg-gray-700"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Ajouter une section
+            </Button>
           </div>
         )}
       </div>
@@ -463,7 +457,6 @@ const Service = () => {
           }}
           onSubmit={handleEditService}
           currentService={
-            // On utilise les données brutes du service tel que stocké dans Firestore
             sections
               .find(s => s.id === currentSectionId)
               ?.services.find(serv => serv.id === currentServiceId) || 
