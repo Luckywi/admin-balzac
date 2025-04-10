@@ -7,9 +7,22 @@ import {
 } from '../../types/Staff';
 import { useState, useEffect } from 'react';
 import { setDoc, doc, getDoc } from 'firebase/firestore';
+import { DayOfWeek } from '../../types/Salon';
+import { Switch } from '@/components/ui/switch';
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from "@/components/ui/select"
+  import { Input } from "@/components/ui/input"
 
-import { DayOfWeek } from '../../types/Salon'
-
+  
 interface DispoStaffProps {
   isOpen: boolean;
   onClose: () => void;
@@ -44,6 +57,7 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
   const [activeTab, setActiveTab] = useState<'horaires' | 'pauses' | 'vacances'>('horaires');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const [newBreak, setNewBreak] = useState<Omit<Break, 'id'>>({
     day: 'Lundi',
@@ -57,12 +71,30 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
     description: ''
   });
 
+  // Création des objets Date pour le calendrier
+  const startDateObj = newVacation.startDate ? new Date(newVacation.startDate) : undefined;
+  const endDateObj = newVacation.endDate ? new Date(newVacation.endDate) : undefined;
+
   // Charger les données existantes quand la modale s'ouvre
   useEffect(() => {
     if (isOpen && staffId) {
       loadStaffAvailability();
     }
   }, [isOpen, staffId]);
+
+  // Mettre à jour les jours sélectionnables pour les pauses quand les jours de travail changent
+  useEffect(() => {
+    // Récupérer les jours travaillés
+    const workingDays = DAYS_OF_WEEK.filter(day => workDays[day]);
+    
+    // Si aucun jour n'est travaillé, nous ne pouvons pas ajouter de pause
+    if (workingDays.length === 0) return;
+    
+    // Si le jour actuel de la pause n'est pas un jour travaillé, le changer pour le premier jour travaillé
+    if (!workDays[newBreak.day]) {
+      setNewBreak(prev => ({ ...prev, day: workingDays[0] }));
+    }
+  }, [workDays, newBreak.day]);
 
   const loadStaffAvailability = async () => {
     try {
@@ -98,13 +130,6 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
     }
   };
 
-  // Déterminer quel jour de travail est sélectionné par défaut pour les pauses
-  useEffect(() => {
-    // Trouver le premier jour travaillé pour l'utiliser dans le formulaire de pause
-    const firstWorkDay = DAYS_OF_WEEK.find(day => workDays[day]) || DAYS_OF_WEEK[0];
-    setNewBreak(prev => ({ ...prev, day: firstWorkDay }));
-  }, [workDays]);
-
   const handleWorkDayChange = (day: DayOfWeek) => {
     setWorkDays(prev => {
       const updated = { ...prev, [day]: !prev[day] };
@@ -125,13 +150,17 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
   const handleAddBreak = () => {
     // Validation: vérifier si la fin est après le début
     if (newBreak.start >= newBreak.end) {
+      setError("L'heure de fin doit être après l'heure de début");
+      setTimeout(() => setError(null), 3000);
       return;
     }
 
     // Vérifier si au moins un jour est travaillé
     const hasWorkDay = Object.values(workDays).some(value => value);
     if (!hasWorkDay) {
+      setError("Veuillez définir au moins un jour travaillé");
       setActiveTab('horaires');
+      setTimeout(() => setError(null), 3000);
       return;
     }
 
@@ -144,20 +173,32 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
       start: '12:00',
       end: '13:00'
     });
+    
+    // Message de confirmation
+    setSuccessMessage("Pause ajoutée avec succès");
+    setTimeout(() => setSuccessMessage(null), 3000);
   };
 
   const handleDeleteBreak = (id: string) => {
     setBreaks(breaks.filter(b => b.id !== id));
+    
+    // Message de confirmation
+    setSuccessMessage("Pause supprimée avec succès");
+    setTimeout(() => setSuccessMessage(null), 3000);
   };
 
   const handleAddVacation = () => {
     // Validation
     if (!newVacation.startDate || !newVacation.endDate) {
+      setError("Les dates de début et de fin sont obligatoires");
+      setTimeout(() => setError(null), 3000);
       return;
     }
 
     // Vérifier que la date de fin est après la date de début
     if (new Date(newVacation.startDate) > new Date(newVacation.endDate)) {
+      setError("La date de fin doit être après la date de début");
+      setTimeout(() => setError(null), 3000);
       return;
     }
 
@@ -170,10 +211,18 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
       endDate: '',
       description: ''
     });
+    
+    // Message de confirmation
+    setSuccessMessage("Période d'absence ajoutée avec succès");
+    setTimeout(() => setSuccessMessage(null), 3000);
   };
 
   const handleDeleteVacation = (id: string) => {
     setVacations(vacations.filter(v => v.id !== id));
+    
+    // Message de confirmation
+    setSuccessMessage("Période d'absence supprimée avec succès");
+    setTimeout(() => setSuccessMessage(null), 3000);
   };
 
   const handleSave = async () => {
@@ -185,7 +234,9 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
       // Vérifier si au moins un jour est travaillé
       const hasWorkDay = Object.values(workDays).some(value => value);
       if (!hasWorkDay) {
+        setError("Veuillez définir au moins un jour travaillé");
         setActiveTab('horaires');
+        setTimeout(() => setError(null), 3000);
         return;
       }
 
@@ -207,14 +258,22 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
 
       // Enregistrer dans Firestore
       await setDoc(doc(db, 'staff', staffId), data, { merge: true });
-      onClose();
+      
+      // Message de confirmation
+      setSuccessMessage("Les disponibilités ont été enregistrées avec succès");
+      setTimeout(() => {
+        setSuccessMessage(null);
+        onClose();
+      }, 2000);
     } catch (error) {
       console.error('Erreur enregistrement Firestore:', error);
       setError("Erreur lors de l'enregistrement. Veuillez réessayer.");
+      setTimeout(() => setError(null), 3000);
     } finally {
       setIsLoading(false);
     }
   };
+  
   if (!isOpen) return null;
 
   return (
@@ -236,7 +295,14 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
           </button>
         </div>
         
-        {isLoading ? (
+        {/* Messages de notification */}
+        {(error || successMessage) && (
+          <div className={`p-4 ${error ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+            {error || successMessage}
+          </div>
+        )}
+        
+        {isLoading && !error && !successMessage ? (
           <div className="flex-1 flex items-center justify-center p-6">
             <div className="text-center">
               <svg className="animate-spin h-8 w-8 text-gray-900 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -244,18 +310,6 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
               <p className="mt-2 text-gray-600">Chargement en cours...</p>
-            </div>
-          </div>
-        ) : error ? (
-          <div className="flex-1 flex items-center justify-center p-6">
-            <div className="text-center text-red-600">
-              <p>{error}</p>
-              <button
-                onClick={loadStaffAvailability}
-                className="mt-4 px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors"
-              >
-                Réessayer
-              </button>
             </div>
           </div>
         ) : (
@@ -285,7 +339,7 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                     : 'text-gray-600 hover:text-gray-900'}`}
                   onClick={() => setActiveTab('vacances')}
                 >
-                  Vacances
+                  Absences
                 </button>
               </div>
             </div>
@@ -303,25 +357,25 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                     {DAYS_OF_WEEK.map(day => (
                       <div key={day} className="flex flex-wrap md:flex-nowrap items-center gap-4 py-3 border-b border-gray-900">
                         <div className="w-full md:w-36 flex items-center">
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id={`switch-${day}`}
                               checked={workDays[day]}
-                              onChange={() => handleWorkDayChange(day)}
-                              className="sr-only peer"
+                              onCheckedChange={() => handleWorkDayChange(day)}
+                              className="relative data-[state=checked]:bg-gray-900 data-[state=unchecked]:bg-white border-2 border-gray-900 p-0 h-6 w-11 rounded-full
+                                [&>span]:transition-transform [&>span]:duration-200
+                                [&>span]:data-[state=checked]:translate-x-[22px]
+                                [&>span]:data-[state=unchecked]:translate-x-[4px]
+                                [&>span]:data-[state=checked]:bg-white 
+                                [&>span]:data-[state=unchecked]:bg-gray-900"
                             />
-                            <div className="w-11 h-6 bg-gray-900 border-2 border-gray-900 
-                              peer-checked:border-2 peer-checked:border-transparent
-                              peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 
-                              rounded-full peer relative transition-colors
-                              peer-checked:bg-gray-900 
-                              after:content-[''] after:absolute after:top-[2px] after:start-[2px] 
-                              after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all 
-                              after:border-2 after:border-gray-900 peer-checked:after:border-white 
-                              peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full">
-                            </div>
-                            <span className="ms-3 text-gray-900 font-medium">{day}</span>
-                          </label>
+                            <label 
+                              htmlFor={`switch-${day}`} 
+                              className="text-gray-900 font-medium cursor-pointer"
+                            >
+                              {day}
+                            </label>
+                          </div>
                         </div>
                         
                         {workDays[day] && (
@@ -372,16 +426,23 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm text-gray-600 mb-1">Jour</label>
-                        <select
-                          value={newBreak.day}
-                          onChange={(e) => setNewBreak({...newBreak, day: e.target.value as DayOfWeek})}
-                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-full"
-                          disabled={!Object.values(workDays).some(v => v)}
-                        >
-                          {DAYS_OF_WEEK.filter(day => workDays[day]).map(day => (
-                            <option key={day} value={day}>{day}</option>
-                          ))}
-                        </select>
+                        <Select
+  value={newBreak.day}
+  onValueChange={(value) => setNewBreak({ ...newBreak, day: value as DayOfWeek })}
+  disabled={!Object.values(workDays).some(v => v)}
+>
+  <SelectTrigger className="w-full border border-gray-900 rounded-md bg-white text-gray-900 shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900">
+    <SelectValue placeholder="Choisir un jour" />
+  </SelectTrigger>
+  <SelectContent>
+    {DAYS_OF_WEEK.filter(day => workDays[day]).map((day) => (
+      <SelectItem key={day} value={day}>
+        {day}
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
+
                         {!Object.values(workDays).some(v => v) && (
                           <p className="text-xs text-red-500 mt-1">
                             Veuillez définir au moins un jour travaillé
@@ -475,11 +536,11 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                 </div>
               )}
               
-              {/* Onglet Vacances */}
+              {/* Onglet Vacances/Absences */}
               {activeTab === 'vacances' && (
                 <div>
                   <p className="mb-4 text-gray-600">
-                    Définissez les périodes de vacances ou d'absence.
+                    Définissez les périodes d'absence (vacances, congés, formation, etc.).
                   </p>
                   
                   {/* Formulaire d'ajout de vacances */}
@@ -488,34 +549,72 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm text-gray-600 mb-1">Date de début</label>
-                        <input
-                          type="date"
-                          value={newVacation.startDate}
-                          onChange={(e) => setNewVacation({...newVacation, startDate: e.target.value})}
-                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-full"
-                        />
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              className="w-full px-3 py-2 text-sm border border-gray-900 rounded-md bg-white text-left shadow-sm"
+                            >
+                              {startDateObj ? format(startDateObj, "PPP", { locale: fr }) : "Choisir une date"}
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={startDateObj}
+                              onSelect={(date) =>
+                                setNewVacation((prev) => ({
+                                  ...prev,
+                                  startDate: date ? date.toISOString().split("T")[0] : ""
+                                }))
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
                       </div>
                       
                       <div>
                         <label className="block text-sm text-gray-600 mb-1">Date de fin</label>
-                        <input
-                          type="date"
-                          value={newVacation.endDate}
-                          onChange={(e) => setNewVacation({...newVacation, endDate: e.target.value})}
-                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-full"
-                        />
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              className="w-full px-3 py-2 text-sm border border-gray-900 rounded-md bg-white text-left shadow-sm"
+                            >
+                              {endDateObj ? format(endDateObj, "PPP", { locale: fr }) : "Choisir une date"}
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={endDateObj}
+                              onSelect={(date) =>
+                                setNewVacation((prev) => ({
+                                  ...prev,
+                                  endDate: date ? date.toISOString().split("T")[0] : ""
+                                }))
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
                       </div>
                       
                       <div>
-                        <label className="block text-sm text-gray-600 mb-1">Description</label>
-                        <input
-                          type="text"
-                          placeholder="Congés, formation, etc."
-                          value={newVacation.description}
-                          onChange={(e) => setNewVacation({...newVacation, description: e.target.value})}
-                          className="inline-block border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-full"
-                        />
-                      </div>
+  <label className="block text-sm text-gray-600 mb-1">Description</label>
+  <Input
+  type="text"
+  placeholder="Congés, formation, etc."
+  value={newVacation.description}
+  onChange={(e) =>
+    setNewVacation({ ...newVacation, description: e.target.value })
+  }
+  className="border border-gray-900 bg-white text-gray-900 rounded-md shadow-none focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-gray-900"
+/>
+
+
+
+</div>
+
                     </div>
                     
                     <button
@@ -557,7 +656,7 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                                 {new Date(vacation.endDate).toLocaleDateString('fr-FR')}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {vacation.description}
+                                {vacation.description || "-"}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <button
@@ -566,7 +665,7 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                                   aria-label="Supprimer"
                                 >
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                                   </svg>
                                 </button>
                               </td>
@@ -597,7 +696,17 @@ const DispoStaff = ({ isOpen, onClose, staffId, staffName }: DispoStaffProps) =>
                 className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
                 disabled={isLoading}
               >
-                {isLoading ? 'Enregistrement...' : 'Enregistrer'}
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Enregistrement...
+                  </>
+                ) : (
+                  'Enregistrer'
+                )}
               </button>
             </div>
           </>

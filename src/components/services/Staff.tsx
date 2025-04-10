@@ -36,9 +36,7 @@ const Staff = () => {
   };
 
   return (
-    <div className="mt-8">
-      <h2 className="text-xl font-semibold mb-6">Notre équipe</h2>
-      
+    <div className="mt-8">      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {staffMembers.map((staff) => (
           <div key={staff.id} className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center">
@@ -48,10 +46,7 @@ const Staff = () => {
                 alt={`Photo de ${staff.name}`} 
                 className="w-32 h-32 object-cover"
               />
-            </div>
-            
-            <h3 className="text-lg font-medium mb-2">{staff.name}</h3>
-            
+            </div>    
             <button
               onClick={() => openModal(staff)}
               className="mt-4 px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"

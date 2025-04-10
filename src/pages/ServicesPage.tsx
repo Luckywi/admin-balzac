@@ -44,28 +44,22 @@ export default function ServicesPage() {
       <main className="flex-grow p-4">
         <div className="container mx-auto">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold mb-4">Services et prestations</h1>
             
-            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-              <p className="text-gray-600">
-                Ce module vous permet de gérer les services proposés par votre salon ainsi que le personnel qui les réalise.
-              </p>
+             {/* Section 1: Personnel */}
+             <div className="mb-8">
+              <Staff />
             </div>
-            
-            {/* Section 1: Liste des services */}
-            <div className="mb-8">
-              <Service />
-            </div>
-            
+
             {/* Section 2: Horaires du salon */}
             <div className="mb-8">
               <DispoSalon />
             </div>
-            
-            {/* Section 3: Personnel */}
+
+            {/* Section 3: Liste des services */}
             <div className="mb-8">
-              <Staff />
+              <Service />
             </div>
+  
           </div>
         </div>
       </main>

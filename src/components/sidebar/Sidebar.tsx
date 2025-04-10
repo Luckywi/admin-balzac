@@ -41,7 +41,7 @@ const Sidebar: FC<SidebarProps> = ({ isOpen, onClose, activeTab, onTabChange }) 
         }`}
       >
         <div className="p-6">
-          <h2 className="text-xl font-semibold mb-8">Menu</h2>
+          <h2 className="text-xl font-semibold mb-8 text-white">Menu</h2>
           <nav>
             <ul className="space-y-6">
               <li>

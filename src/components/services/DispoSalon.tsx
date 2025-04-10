@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { Switch } from '@/components/ui/switch';
+import { cn } from '@/lib/utils';
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Input } from '../ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface WorkHours {
   start: string;
@@ -82,10 +90,26 @@ const DispoSalon = () => {
     description: ''
   });
 
+  // Créer les objets Date basés sur les dates de début et de fin
+  const startDateObj = newVacation.startDate ? new Date(newVacation.startDate) : undefined;
+  const endDateObj = newVacation.endDate ? new Date(newVacation.endDate) : undefined;
+
   // Charger les données au chargement du composant
   useEffect(() => {
     loadSalonConfig();
   }, []);
+
+  // S'assurer que le jour sélectionné pour les pauses est toujours un jour d'ouverture
+  useEffect(() => {
+    // Si le jour actuellement sélectionné n'est plus un jour d'ouverture
+    if (!workDays[newBreak.day]) {
+      // Trouver le premier jour d'ouverture disponible
+      const firstAvailableDay = DAYS_OF_WEEK.find(day => workDays[day]);
+      if (firstAvailableDay) {
+        setNewBreak(prev => ({...prev, day: firstAvailableDay}));
+      }
+    }
+  }, [workDays, newBreak.day]);
 
   // Charger la configuration du salon depuis Firestore
   const loadSalonConfig = async () => {
@@ -332,27 +356,25 @@ const DispoSalon = () => {
               {DAYS_OF_WEEK.map(day => (
                 <div key={day} className="flex flex-wrap md:flex-nowrap items-center gap-4 py-3 border-b border-gray-900">
                   <div className="w-full md:w-36 flex items-center">
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id={`switch-${day}`}
                         checked={workDays[day]}
-                        onChange={() => handleWorkDayChange(day)}
-                        className="sr-only peer"
+                        onCheckedChange={() => handleWorkDayChange(day)}
+                        className="relative data-[state=checked]:bg-gray-900 data-[state=unchecked]:bg-white border-2 border-gray-900 p-0 h-6 w-11 rounded-full
+                          [&>span]:transition-transform [&>span]:duration-200
+                          [&>span]:data-[state=checked]:translate-x-[22px]
+                          [&>span]:data-[state=unchecked]:translate-x-[4px]
+                          [&>span]:data-[state=checked]:bg-white 
+                          [&>span]:data-[state=unchecked]:bg-gray-900"
                       />
-                      <div className="w-11 h-6 bg-gray-900 border-2 border-gray-900 
-  peer-checked:border-2 peer-checked:border-transparent
-  peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 
-  rounded-full peer relative transition-colors
-  peer-checked:bg-gray-900 
-  after:content-[''] after:absolute after:top-[2px] after:start-[2px] 
-  after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all 
-  after:border-2 after:border-gray-900 peer-checked:after:border-white 
-  peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full">
-</div>
-
-
-                      <span className="ms-3 text-gray-900 font-medium">{day}</span>
-                    </label>
+                      <label 
+                        htmlFor={`switch-${day}`} 
+                        className="text-gray-900 font-medium cursor-pointer"
+                      >
+                        {day}
+                      </label>
+                    </div>
                   </div>
                   
                   {workDays[day] && (
@@ -403,15 +425,19 @@ const DispoSalon = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm text-gray-600 mb-1">Jour</label>
-                  <select
+                  <Select
                     value={newBreak.day}
-                    onChange={(e) => setNewBreak({...newBreak, day: e.target.value})}
-                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-auto"
+                    onValueChange={(value) => setNewBreak({...newBreak, day: value})}
                   >
-                    {DAYS_OF_WEEK.filter(day => workDays[day]).map(day => (
-                      <option key={day} value={day}>{day}</option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900">
+                      <SelectValue placeholder="Sélectionner un jour" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DAYS_OF_WEEK.filter(day => workDays[day]).map(day => (
+                        <SelectItem key={day} value={day}>{day}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div>
@@ -420,7 +446,7 @@ const DispoSalon = () => {
                     type="time"
                     value={newBreak.start}
                     onChange={(e) => setNewBreak({...newBreak, start: e.target.value})}
-                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-auto"
+                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-full"
                   />
                 </div>
                 
@@ -430,7 +456,7 @@ const DispoSalon = () => {
                     type="time"
                     value={newBreak.end}
                     onChange={(e) => setNewBreak({...newBreak, end: e.target.value})}
-                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-auto"
+                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-full"
                   />
                 </div>
               </div>
@@ -511,32 +537,66 @@ const DispoSalon = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm text-gray-600 mb-1">Date de début</label>
-                  <input
-                    type="date"
-                    value={newVacation.startDate}
-                    onChange={(e) => setNewVacation({...newVacation, startDate: e.target.value})}
-                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-auto"
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        className="w-full px-3 py-2 text-sm border border-gray-900 rounded-md bg-white text-left shadow-sm"
+                      >
+                        {startDateObj ? format(startDateObj, "PPP", { locale: fr }) : "Choisir une date"}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDateObj}
+                        onSelect={(date) =>
+                          setNewVacation((prev) => ({
+                            ...prev,
+                            startDate: date ? date.toISOString().split("T")[0] : ""
+                          }))
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm text-gray-600 mb-1">Date de fin</label>
-                  <input
-                    type="date"
-                    value={newVacation.endDate}
-                    onChange={(e) => setNewVacation({...newVacation, endDate: e.target.value})}
-                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-auto"
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        className="w-full px-3 py-2 text-sm border border-gray-900 rounded-md bg-white text-left shadow-sm"
+                      >
+                        {endDateObj ? format(endDateObj, "PPP", { locale: fr }) : "Choisir une date"}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDateObj}
+                        onSelect={(date) =>
+                          setNewVacation((prev) => ({
+                            ...prev,
+                            endDate: date ? date.toISOString().split("T")[0] : ""
+                          }))
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">Motif</label>
-                  <input
+                  <label className="block text-sm text-gray-600 mb-1">Motif (optionnel)</label>
+                  <Input
                     type="text"
-                    placeholder="Vacances, travaux, etc."
+                    placeholder="Exemple : Congés annuels"
                     value={newVacation.description}
-                    onChange={(e) => setNewVacation({...newVacation, description: e.target.value})}
-                    className="inline-block border border-gray-900 rounded-md px-2 py-1 text-center text-gray-900 bg-white shadow-sm focus:border-gray-900 focus:ring-gray-900 w-auto"
+                    onChange={(e) =>
+                      setNewVacation({ ...newVacation, description: e.target.value })
+                    }
+                    className="border border-gray-900 bg-white text-gray-900 rounded-md shadow-none focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-gray-900"
                   />
                 </div>
               </div>
@@ -549,7 +609,7 @@ const DispoSalon = () => {
                 Ajouter cette fermeture
               </button>
             </div>
-            
+
             {/* Liste des fermetures */}
             {vacations.length > 0 ? (
               <div className="overflow-x-auto mt-6 rounded-lg border border-gray-900">
@@ -580,7 +640,7 @@ const DispoSalon = () => {
                           {new Date(vacation.endDate).toLocaleDateString('fr-FR')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {vacation.description}
+                          {vacation.description || "-"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <button
@@ -627,7 +687,7 @@ const DispoSalon = () => {
         </div>
       </div>
     </div>
-    );
-  };
-  
-  export default DispoSalon;
+  );
+};
+
+export default DispoSalon;

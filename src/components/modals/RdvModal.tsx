@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
-import { isWithinInterval } from 'date-fns';
+import { isWithinInterval, format, addMinutes, isSameDay, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Calendar } from '@/components/ui/calendar';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 interface RdvModalProps {
   isOpen: boolean;
@@ -55,66 +59,102 @@ interface SalonConfig {
   updatedAt: any;
 }
 
+interface StaffAvailability {
+  staffId: string;
+  workingHours: Record<string, { working: boolean; ranges: { start: string; end: string }[] }>;
+  breaks: Break[];
+  vacations: Vacation[];
+}
+
+interface Rdv {
+  id: string;
+  start: string;
+  end: string;
+  staffId: string;
+}
+
 const DAYS_OF_WEEK = [
   'Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'
 ];
 
 const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
+  // États principaux du formulaire
   const [formData, setFormData] = useState({
     clientName: '',
-    clientPhone: '', // Optionnel
-    notes: '', // Nouveau champ notes
+    clientPhone: '',
+    notes: '',
     staffId: '',
     date: '',
     time: ''
   });
 
-  // États pour les sections et services
+  // État pour la progression du formulaire
+  const [step, setStep] = useState(1);
+
+  // États pour les données et sélections
   const [sections, setSections] = useState<Section[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
+  const [existingRdvs, setExistingRdvs] = useState<Rdv[]>([]);
+  const [openSectionId, setOpenSectionId] = useState<string | null>(null);
+
+  // États pour la configuration et les disponibilités
+  const [salonConfig, setSalonConfig] = useState<SalonConfig | null>(null);
+  const [staffAvailability, setStaffAvailability] = useState<StaffAvailability | null>(null);
+  
+  // États pour le traitement
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-
-  // États pour le menu déroulant
-  const [openSectionId, setOpenSectionId] = useState<string | null>(null);
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
-  
-  // État pour la configuration du salon
-  const [salonConfig, setSalonConfig] = useState<SalonConfig | null>(null);
-  
-  // Validation du créneau
   const [timeError, setTimeError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [isGlobalLoading, setIsGlobalLoading] = useState(true);
 
-  // Charger les sections et services au chargement de la modale
+  // Chargement initial des données
   useEffect(() => {
     if (isOpen) {
-      loadSectionsAndServices();
-      loadStaffMembers();
-      loadSalonConfig();
-      console.log("Chargement des sections, services et coiffeurs...");
+      Promise.all([
+        loadSectionsAndServices(),
+        loadStaffMembers(),
+        loadSalonConfig(),
+        loadExistingRdvs()
+      ]).then(() => {
+        setIsGlobalLoading(false);
+      }).catch(error => {
+        console.error("Erreur lors du chargement initial:", error);
+        setIsGlobalLoading(false);
+        setError("Impossible de charger les données nécessaires. Veuillez réessayer.");
+      });
     }
   }, [isOpen]);
-  
-  // Charger la configuration du salon
-  const loadSalonConfig = async () => {
-    try {
-      // Récupérer la configuration du salon depuis Firestore
-      const docRef = doc(db, 'salon', 'config');
-      const docSnap = await getDoc(docRef);
-      
-      if (docSnap.exists()) {
-        const data = docSnap.data() as SalonConfig;
-        setSalonConfig(data);
-      } else {
-        console.log("Aucune configuration de salon trouvée");
-      }
-    } catch (err) {
-      console.error("Erreur lors du chargement de la configuration du salon:", err);
-    }
-  };
 
+  // Effet pour charger les disponibilités du staff quand il est sélectionné
+  useEffect(() => {
+    if (formData.staffId) {
+      loadStaffAvailability(formData.staffId);
+    }
+  }, [formData.staffId]);
+
+  // Effet pour mettre à jour les créneaux disponibles quand la date change
+  useEffect(() => {
+    if (selectedDate && formData.staffId && selectedService) {
+      generateAvailableTimeSlots(selectedDate, formData.staffId, selectedService.duration);
+    }
+  }, [selectedDate, formData.staffId, selectedService]);
+
+  // Effet pour mettre à jour le champ date dans formData
+  useEffect(() => {
+    if (selectedDate) {
+      setFormData(prev => ({
+        ...prev,
+        date: format(selectedDate, 'yyyy-MM-dd')
+      }));
+    }
+  }, [selectedDate]);
+
+  // Charger les sections et services
   const loadSectionsAndServices = async () => {
     try {
       setLoading(true);
@@ -125,7 +165,6 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
         id: doc.id,
         title: doc.data().title
       }));
-      console.log("Sections chargées:", sectionsData);
       setSections(sectionsData);
       
       // Charger les services
@@ -138,72 +177,91 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
         price: doc.data().price || 0,
         sectionId: doc.data().sectionId
       }));
-      console.log("Services chargés:", servicesData);
       setServices(servicesData);
       
     } catch (err) {
       console.error("Erreur lors du chargement des données:", err);
-      setError("Impossible de charger les données. Veuillez réessayer.");
+      setError("Impossible de charger les services. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Charger les membres du staff
   const loadStaffMembers = async () => {
     try {
-      // Récupérer les documents de la collection staff
       const staffSnapshot = await getDocs(collection(db, 'staff'));
       const staffData = staffSnapshot.docs.map(doc => {
-        // Utiliser l'ID du document comme identifiant et comme nom affiché
         return {
           id: doc.id,
-          // Convertir le premier caractère en majuscule pour l'affichage
           name: doc.id.charAt(0).toUpperCase() + doc.id.slice(1)
         };
       });
       
-      console.log("Coiffeurs chargés:", staffData);
       setStaffMembers(staffData);
-      
     } catch (err) {
       console.error("Erreur lors du chargement des coiffeurs:", err);
-      // Ne pas définir d'erreur ici pour ne pas bloquer le reste de l'interface
+      setError("Impossible de charger les coiffeurs. Veuillez réessayer.");
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-    
-    // Réinitialiser l'erreur de temps si on change la date ou l'heure
-    if (name === 'date' || name === 'time') {
-      setTimeError(null);
+  // Charger la configuration du salon
+  const loadSalonConfig = async () => {
+    try {
+      const docRef = doc(db, 'salon', 'config');
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data() as SalonConfig;
+        setSalonConfig(data);
+      } else {
+        console.log("Aucune configuration de salon trouvée");
+      }
+    } catch (err) {
+      console.error("Erreur lors du chargement de la configuration du salon:", err);
+      setError("Impossible de charger les horaires du salon. Veuillez réessayer.");
     }
   };
 
-  const handleSelectService = (service: Service) => {
-    setSelectedService(service);
-    setOpenSectionId(null); // Fermer le menu déroulant
-  };
-
-  const toggleSection = (sectionId: string) => {
-    if (openSectionId === sectionId) {
-      setOpenSectionId(null); // Fermer si c'est déjà ouvert
-    } else {
-      setOpenSectionId(sectionId); // Ouvrir cette section
+  // Charger les disponibilités d'un membre du staff
+  const loadStaffAvailability = async (staffId: string) => {
+    try {
+      const docRef = doc(db, 'staff', staffId);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data() as StaffAvailability;
+        setStaffAvailability(data);
+      } else {
+        console.log(`Aucune disponibilité trouvée pour le coiffeur ${staffId}`);
+      }
+    } catch (err) {
+      console.error(`Erreur lors du chargement des disponibilités du coiffeur ${staffId}:`, err);
+      setError("Impossible de charger les disponibilités du coiffeur. Veuillez réessayer.");
     }
   };
 
-  const getServicesForSection = (sectionId: string) => {
-    return services.filter(service => service.sectionId === sectionId);
+  // Charger les rendez-vous existants
+  const loadExistingRdvs = async () => {
+    try {
+      const rdvsSnapshot = await getDocs(collection(db, 'rdvs'));
+      const rdvsData = rdvsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        start: doc.data().start,
+        end: doc.data().end,
+        staffId: doc.data().staffId
+      }));
+      
+      setExistingRdvs(rdvsData);
+    } catch (err) {
+      console.error("Erreur lors du chargement des rendez-vous existants:", err);
+      setError("Impossible de vérifier les disponibilités. Veuillez réessayer.");
+    }
   };
-  
+
   // Vérifier si une date est un jour de fermeture du salon
   const isSalonClosed = (date: Date): boolean => {
-    if (!salonConfig) return false;
+    if (!salonConfig) return true;
     
     // Vérifier si c'est un jour de fermeture hebdomadaire
     const dayOfWeek = DAYS_OF_WEEK[date.getDay()];
@@ -222,74 +280,196 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
     
     return vacationClosed;
   };
-  
-  // Vérifier si l'heure est en dehors des heures d'ouverture
-  const isOutsideBusinessHours = (date: Date, endDate: Date): boolean => {
-    if (!salonConfig) return false;
+
+  // Vérifier si c'est un jour où le staff ne travaille pas
+  const isStaffDayOff = (date: Date): boolean => {
+    if (!staffAvailability) return true;
     
     const dayOfWeek = DAYS_OF_WEEK[date.getDay()];
-    const dayHours = salonConfig.workHours[dayOfWeek];
     
-    if (!dayHours) return true;
-    
-    const timeString = (d: Date) => {
-      return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-    };
-    
-    const startTime = timeString(date);
-    const endTime = timeString(endDate);
-    
-    // Vérifier si l'heure de début est avant l'ouverture ou l'heure de fin après la fermeture
-    if (startTime < dayHours.start || endTime > dayHours.end) {
+    // Vérifier si c'est un jour de repos hebdomadaire
+    if (!staffAvailability.workingHours[dayOfWeek]?.working) {
       return true;
     }
     
-    // Vérifier si pendant une pause
-    return salonConfig.breaks.some(breakItem => {
-      if (breakItem.day === dayOfWeek) {
-        // Vérifier si le RDV chevauche une pause
-        return (startTime >= breakItem.start && startTime < breakItem.end) || 
-               (endTime > breakItem.start && endTime <= breakItem.end) ||
-               (startTime <= breakItem.start && endTime >= breakItem.end);
-      }
-      return false;
+    // Vérifier si c'est un jour de vacances
+    return staffAvailability.vacations.some(vacation => {
+      const startDate = new Date(vacation.startDate);
+      const endDate = new Date(vacation.endDate);
+      endDate.setHours(23, 59, 59, 999); // Inclure le jour de fin complet
+      
+      return isWithinInterval(date, { start: startDate, end: endDate });
     });
   };
-
-  const validateAppointmentTime = (): string | null => {
-    if (!formData.date || !formData.time || !selectedService) {
-      return "Veuillez sélectionner une date, une heure et un service";
+  
+  // Fonction pour générer les créneaux horaires disponibles
+  const generateAvailableTimeSlots = (date: Date, staffId: string, duration: number) => {
+    if (!salonConfig || !staffAvailability) {
+      setAvailableTimeSlots([]);
+      return;
     }
     
-    // Créer des objets Date pour le début et la fin du RDV
-    const startDateTime = new Date(`${formData.date}T${formData.time}`);
-    const endDateTime = new Date(startDateTime.getTime() + selectedService.duration * 60000);
+    const dayOfWeek = DAYS_OF_WEEK[date.getDay()];
+    const salonHours = salonConfig.workHours[dayOfWeek];
+    const staffDaySchedule = staffAvailability.workingHours[dayOfWeek];
     
-    // Vérifier si c'est un jour fermé
-    if (isSalonClosed(startDateTime)) {
-      return "Le salon est fermé à cette date";
+    if (!salonHours || !staffDaySchedule || !staffDaySchedule.working) {
+      setAvailableTimeSlots([]);
+      return;
     }
     
-    // Vérifier si c'est en dehors des heures d'ouverture ou pendant une pause
-    if (isOutsideBusinessHours(startDateTime, endDateTime)) {
-      return "Ce créneau est en dehors des heures d'ouverture ou pendant une pause";
+    // Trouver l'intersection des heures du salon et du staff
+    const workRanges: {start: string, end: string}[] = [];
+    
+    for (const staffRange of staffDaySchedule.ranges) {
+      // Vérifier que la plage du staff est dans les heures d'ouverture du salon
+      if (staffRange.start < salonHours.end && staffRange.end > salonHours.start) {
+        // Prendre l'intersection
+        const rangeStart = staffRange.start < salonHours.start ? salonHours.start : staffRange.start;
+        const rangeEnd = staffRange.end > salonHours.end ? salonHours.end : staffRange.end;
+        
+        workRanges.push({ start: rangeStart, end: rangeEnd });
+      }
     }
     
-    return null;
+    if (workRanges.length === 0) {
+      setAvailableTimeSlots([]);
+      return;
+    }
+    
+    // Récupérer les pauses du salon et du staff pour ce jour
+    const salonBreaks = salonConfig.breaks.filter(b => b.day === dayOfWeek);
+    const staffBreaks = staffAvailability.breaks.filter(b => b.day === dayOfWeek);
+    
+    // Récupérer les rendez-vous existants pour ce staff et cette date
+    const dateString = format(date, 'yyyy-MM-dd');
+    const dayRdvs = existingRdvs.filter(rdv => {
+      return rdv.staffId === staffId && rdv.start.startsWith(dateString);
+    });
+    
+    // Générer les créneaux disponibles par intervalles de 15 minutes
+    const slots: string[] = [];
+    
+    workRanges.forEach(range => {
+      let currentTime = range.start;
+      
+      while (currentTime <= range.end) {
+        // Vérifier si ce créneau chevauche une pause du salon
+        const isSalonBreak = salonBreaks.some(breakItem => {
+          return currentTime >= breakItem.start && currentTime < breakItem.end;
+        });
+        
+        // Vérifier si ce créneau chevauche une pause du staff
+        const isStaffBreak = staffBreaks.some(breakItem => {
+          return currentTime >= breakItem.start && currentTime < breakItem.end;
+        });
+        
+        // Vérifier si le créneau + durée du service chevauche un rendez-vous existant
+        const [hours, minutes] = currentTime.split(':').map(Number);
+        const slotStart = new Date(date);
+        slotStart.setHours(hours, minutes, 0, 0);
+        
+        const slotEnd = addMinutes(slotStart, duration);
+        const slotEndTime = format(slotEnd, 'HH:mm');
+        
+        // Vérifier que la fin du créneau reste dans les heures travaillées
+        if (slotEndTime > range.end) {
+          // Créneau trop long pour cette plage horaire
+          break;
+        }
+        
+        const conflictsWithExistingRdv = dayRdvs.some(rdv => {
+          const rdvStart = new Date(rdv.start);
+          const rdvEnd = new Date(rdv.end);
+          
+          // Vérifier s'il y a chevauchement
+          return (
+            (slotStart < rdvEnd && slotEnd > rdvStart)
+          );
+        });
+        
+        // Si le créneau est disponible, l'ajouter
+        if (!isSalonBreak && !isStaffBreak && !conflictsWithExistingRdv) {
+          slots.push(currentTime);
+        }
+        
+        // Passer au créneau suivant (par incréments de 15 minutes)
+        const currentDate = new Date();
+        const [h, m] = currentTime.split(':').map(Number);
+        currentDate.setHours(h, m + 15, 0, 0);
+        currentTime = format(currentDate, 'HH:mm');
+      }
+    });
+    
+    setAvailableTimeSlots(slots);
   };
 
+  // Fonction pour désactiver les dates dans le calendrier
+  const isDateDisabled = (date: Date) => {
+    const isBeforeToday = date < new Date(new Date().setHours(0, 0, 0, 0));
+    const isClosed = isSalonClosed(date);
+    const isStaffOff = formData.staffId ? isStaffDayOff(date) : false;
+    
+    return isBeforeToday || isClosed || isStaffOff;
+  };
+
+  // Gérer les changements de champs du formulaire
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+    
+    // Réinitialiser l'erreur de temps si on change la date ou l'heure
+    if (name === 'date' || name === 'time') {
+      setTimeError(null);
+    }
+    
+    // Mettre à jour les étapes en fonction du champ modifié
+    if (name === 'clientName' && value.trim() !== '') {
+      setStep(Math.max(step, 2));
+    }
+    
+    if (name === 'staffId' && value !== '') {
+      setStep(Math.max(step, 4));
+      // Réinitialiser la date et l'heure quand on change de staff
+      setSelectedDate(undefined);
+      setFormData(prev => ({ ...prev, date: '', time: '' }));
+    }
+  };
+
+  // Gérer la sélection d'un service
+  const handleSelectService = (service: Service) => {
+    setSelectedService(service);
+    setOpenSectionId(null);
+    setStep(Math.max(step, 3));
+    
+    // Réinitialiser les sélections qui dépendent du service
+    setFormData(prev => ({ ...prev, staffId: '', date: '', time: '' }));
+    setSelectedDate(undefined);
+  };
+
+  // Gérer l'ouverture/fermeture des sections de services
+  const toggleSection = (sectionId: string) => {
+    if (openSectionId === sectionId) {
+      setOpenSectionId(null);
+    } else {
+      setOpenSectionId(sectionId);
+    }
+  };
+
+  // Récupérer les services par section
+  const getServicesForSection = (sectionId: string) => {
+    return services.filter(service => service.sectionId === sectionId);
+  };
+
+  // Soumettre le formulaire
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.clientName || !selectedService || !formData.date || !formData.time || !formData.staffId) {
       setError("Veuillez remplir tous les champs obligatoires");
-      return;
-    }
-    
-    // Vérifier la validité du créneau
-    const validationError = validateAppointmentTime();
-    if (validationError) {
-      setTimeError(validationError);
       return;
     }
     
@@ -328,6 +508,9 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
         time: ''
       });
       setSelectedService(null);
+      setSelectedDate(undefined);
+      setAvailableTimeSlots([]);
+      setStep(1);
       setSuccess(true);
       
       // Fermer la modale après 1,5 secondes
@@ -344,6 +527,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
     }
   };
 
+  // Ne rien afficher si la modale n'est pas ouverte
   if (!isOpen) return null;
 
   return (
@@ -353,251 +537,337 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
           <h3 className="text-lg font-semibold text-white">Nouveau rendez-vous</h3>
         </div>
         
-        {loading && (
-          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+        {isGlobalLoading ? (
+          <div className="p-8 flex flex-col items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-900 mb-4" />
+            <p className="text-gray-600">Chargement des données...</p>
           </div>
-        )}
-        
-        {error && (
-          <div className="p-4 bg-red-100 text-red-700 mb-4">
-            {error}
-          </div>
-        )}
-        
-        {success && (
-          <div className="p-4 bg-green-100 text-green-700 mb-4">
-            Rendez-vous créé avec succès!
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit}>
-          <div className="p-6">
-            <div className="space-y-4">
-              {/* Informations client */}
-              <div>
-                <label htmlFor="clientName" className="block text-sm font-medium text-gray-700 mb-1">
-                  Nom du client *
-                </label>
-                <input
-                  type="text"
-                  id="clientName"
-                  name="clientName"
-                  value={formData.clientName}
-                  onChange={handleChange}
-                  className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
-                  placeholder="Nom et prénom"
-                  required
-                />
+        ) : (
+          <>
+            {error && (
+              <div className="p-4 bg-red-100 text-red-700 mb-4">
+                {error}
               </div>
-              
-              <div>
-                <label htmlFor="clientPhone" className="block text-sm font-medium text-gray-700 mb-1">
-                  Téléphone
-                </label>
-                <input
-                  type="tel"
-                  id="clientPhone"
-                  name="clientPhone"
-                  value={formData.clientPhone}
-                  onChange={handleChange}
-                  className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
-                  placeholder="0612345678"
-                />
+            )}
+            
+            {success && (
+              <div className="p-4 bg-green-100 text-green-700 mb-4">
+                Rendez-vous créé avec succès!
               </div>
-              
-              {/* Sélection du service */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Service *
-                </label>
-                <div className="border border-gray-300 rounded-md overflow-hidden">
-                  {selectedService ? (
-                    <div 
-                      className="p-3 flex justify-between items-center bg-gray-50 cursor-pointer"
-                      onClick={() => setSelectedService(null)}
-                    >
-                      <span className="font-medium text-gray-900">{selectedService.title}</span>
-                      <button
-                        type="button"
-                        className="text-gray-500 hover:text-gray-700"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedService(null);
-                        }}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
+            )}
+            
+            <form onSubmit={handleSubmit}>
+              <div className="p-6 space-y-6">
+                {/* Étape 1: Informations client */}
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="clientName" className="block text-sm font-medium text-gray-700 mb-1">
+                      Nom du client *
+                    </label>
+                    <input
+                      type="text"
+                      id="clientName"
+                      name="clientName"
+                      value={formData.clientName}
+                      onChange={handleChange}
+                      className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
+                      placeholder="Nom et prénom"
+                      required
+                    />
+                  </div>
+                  
+                  {step >= 2 && (
+                    <div>
+                      <label htmlFor="clientPhone" className="block text-sm font-medium text-gray-700 mb-1">
+                        Téléphone
+                      </label>
+                      <input
+                        type="tel"
+                        id="clientPhone"
+                        name="clientPhone"
+                        value={formData.clientPhone}
+                        onChange={handleChange}
+                        className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
+                        placeholder="0612345678"
+                      />
                     </div>
-                  ) : (
-                    sections.map(section => (
-                      <div key={section.id} className="border-b border-gray-300 last:border-b-0">
+                  )}
+                </div>
+                
+                {/* Étape 2: Sélection du service */}
+                {step >= 2 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Service *
+                    </label>
+                    <div className="border border-gray-300 rounded-md overflow-hidden">
+                      {selectedService ? (
                         <div 
-                          className="p-3 flex justify-between items-center bg-gray-50 cursor-pointer hover:bg-gray-100"
-                          onClick={() => toggleSection(section.id)}
+                          className="p-3 flex justify-between items-center bg-gray-50 cursor-pointer"
+                          onClick={() => setSelectedService(null)}
                         >
-                          <span className="font-medium text-gray-900">{section.title}</span>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className={`h-5 w-5 transition-transform ${openSectionId === section.id ? 'transform rotate-180' : ''}`}
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                          <span className="font-medium text-gray-900">{selectedService.title}</span>
+                          <button
+                            type="button"
+                            className="text-gray-500 hover:text-gray-700"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedService(null);
+                              setStep(2);
+                            }}
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
                         </div>
-                        
-                        {openSectionId === section.id && (
-                          <div className="border-t border-gray-300">
-                            {getServicesForSection(section.id).map(service => (
-                              <div
-                                key={service.id}
-                                className="p-3 pl-6 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 flex justify-between"
-                                onClick={() => handleSelectService(service)}
+                      ) : (
+                        sections.map(section => (
+                          <div key={section.id} className="border-b border-gray-300 last:border-b-0">
+                            <div 
+                              className="p-3 flex justify-between items-center bg-gray-50 cursor-pointer hover:bg-gray-100"
+                              onClick={() => toggleSection(section.id)}
+                            >
+                              <span className="font-medium text-gray-900">{section.title}</span>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className={`h-5 w-5 transition-transform ${openSectionId === section.id ? 'transform rotate-180' : ''}`}
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
                               >
-                                <span className="text-gray-900">{service.title}</span>
-                                <span className="text-gray-600">{service.price} €</span>
-                              </div>
-                            ))}
-                            {getServicesForSection(section.id).length === 0 && (
-                              <div className="p-3 pl-6 text-gray-500">
-                                Aucun service dans cette section
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </div>
+                            
+                            {openSectionId === section.id && (
+                              <div className="border-t border-gray-300">
+                                {getServicesForSection(section.id).map(service => (
+                                  <div
+                                    key={service.id}
+                                    className="p-3 pl-6 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 flex justify-between"
+                                    onClick={() => handleSelectService(service)}
+                                  >
+                                    <span className="text-gray-900">{service.title}</span>
+                                    <span className="text-gray-600">{service.price} €</span>
+                                  </div>
+                                ))}
+                                {getServicesForSection(section.id).length === 0 && (
+                                  <div className="p-3 pl-6 text-gray-500">
+                                    Aucun service dans cette section
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
-                        )}
+                        ))
+                      )}
+                    </div>
+                    {!selectedService && (
+                      <p className="mt-1 text-sm text-gray-500">Sélectionnez une section puis un service</p>
+                    )}
+                  </div>
+                )}
+                
+                {/* Étape 3: Sélection du coiffeur */}
+                {step >= 3 && selectedService && (
+                  <div>
+                    <label htmlFor="staffId" className="block text-sm font-medium text-gray-700 mb-1">
+                      Coiffeur *
+                    </label>
+                    <select
+                      id="staffId"
+                      name="staffId"
+                      value={formData.staffId}
+                      onChange={handleChange}
+                      className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
+                      required
+                    >
+                      <option value="" disabled>Sélectionnez un coiffeur</option>
+                      {staffMembers.length > 0 ? (
+                        staffMembers.map(staff => (
+                          <option key={staff.id} value={staff.id}>
+                            {staff.name}
+                          </option>
+                        ))
+                      ) : (
+                        <>
+                          <option value="bea">Béatrice</option>
+                          <option value="cyrille">Cyrille</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+                )}
+                
+                {/* Étape 4: Sélection de la date */}
+                {step >= 4 && selectedService && formData.staffId && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Date *
+                    </label>
+                    <div className="border border-gray-300 rounded-md overflow-hidden">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={date => {
+                          setSelectedDate(date);
+                          if (date) setStep(Math.max(step, 5));
+                        }}
+                        locale={fr}
+                        disabled={isDateDisabled}
+                        className="rounded-md"
+                      />
+                    </div>
+                    {selectedDate && (
+                      <p className="mt-2 text-sm text-gray-600">
+                        Date sélectionnée: {format(selectedDate, 'dd MMMM yyyy', { locale: fr })}
+                      </p>
+                    )}
+                  </div>
+                )}
+                
+                {/* Étape 5: Sélection de l'heure */}
+                {step >= 5 && selectedDate && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Heure *
+                    </label>
+                    
+                    {availableTimeSlots.length > 0 ? (
+                      <div className="grid grid-cols-3 gap-2 mt-2">
+                        {availableTimeSlots.map(time => (
+                          <button
+                            key={time}
+                            type="button"
+                            className={`py-2 px-3 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-colors ${
+                              formData.time === time 
+                                ? 'bg-gray-900 text-white' 
+                                : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                            }`}
+                            onClick={() => {
+                              setFormData(prev => ({ ...prev, time }));
+                              setStep(Math.max(step, 6));
+                            }}
+                          >
+                            {time}
+                          </button>
+                        ))}
                       </div>
-                    ))
-                  )}
-                </div>
-                {!selectedService && (
-                  <p className="mt-1 text-sm text-gray-500">Sélectionnez une section puis un service</p>
+                    ) : (
+                      <div className="p-4 bg-yellow-50 text-yellow-700 rounded-md">
+                        Aucun créneau disponible pour cette date. Veuillez sélectionner une autre date.
+                      </div>
+                    )}
+                    
+                    {timeError && (
+                      <p className="mt-1 text-sm text-red-600">{timeError}</p>
+                    )}
+                  </div>
+                )}
+                
+                {/* Étape 6: Notes (optionnel) */}
+                {step >= 6 && formData.time && (
+                  <div>
+                    <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+                      Notes (optionnel)
+                    </label>
+                    <textarea
+                      id="notes"
+                      name="notes"
+                      value={formData.notes}
+                      onChange={handleChange}
+                      rows={3}
+                      className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
+                      placeholder="Notes supplémentaires (optionnel)"
+                    />
+                  </div>
+                )}
+                
+                {/* Récapitulatif du rendez-vous */}
+                {step >= 6 && selectedService && formData.time && (
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-300 mt-4">
+                    <h4 className="text-base font-medium text-gray-900 mb-3">Récapitulatif du rendez-vous</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Client:</span>
+                        <span className="font-medium">{formData.clientName}</span>
+                      </div>
+                      {formData.clientPhone && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Téléphone:</span>
+                          <span>{formData.clientPhone}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Service:</span>
+                        <span className="font-medium">{selectedService.title}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Prix:</span>
+                        <span className="font-medium">{selectedService.price} €</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Durée:</span>
+                        <span>
+                          {Math.floor(selectedService.duration / 60) > 0 
+                            ? `${Math.floor(selectedService.duration / 60)}h${selectedService.duration % 60 > 0 
+                                ? (selectedService.duration % 60).toString().padStart(2, '0') 
+                                : ''}`
+                            : `${selectedService.duration} min`}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Coiffeur:</span>
+                        <span>
+                          {staffMembers.find(s => s.id === formData.staffId)?.name || 
+                           (formData.staffId === 'bea' ? 'Béatrice' : 
+                            formData.staffId === 'cyrille' ? 'Cyrille' : formData.staffId)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Date:</span>
+                        <span>{selectedDate ? format(selectedDate, 'dd MMMM yyyy', { locale: fr }) : ''}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Heure:</span>
+                        <span>{formData.time}</span>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
               
-              {/* Sélection du coiffeur */}
-              <div>
-                <label htmlFor="staffId" className="block text-sm font-medium text-gray-700 mb-1">
-                  Coiffeur *
-                </label>
-                <select
-                  id="staffId"
-                  name="staffId"
-                  value={formData.staffId}
-                  onChange={handleChange}
-                  className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
-                  required
+              <div className="bg-gray-50 px-6 py-4 flex justify-end space-x-3 rounded-b-lg sticky bottom-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onClose}
+                  disabled={loading}
                 >
-                  <option value="" disabled>Sélectionnez un coiffeur</option>
-                  {staffMembers.length > 0 ? (
-                    staffMembers.map(staff => (
-                      <option key={staff.id} value={staff.id}>
-                        {staff.name}
-                      </option>
-                    ))
-                  ) : (
-                    <>
-                      <option value="bea">Béatrice</option>
-                      <option value="cyrille">Cyrille</option>
-                    </>
-                  )}
-                </select>
-              </div>
-              
-              {/* Sélection de la date et heure */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
-                    Date *
-                  </label>
-                  <input
-                    type="date"
-                    id="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleChange}
-                    className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
-                    required
-                  />
-                </div>
+                  Annuler
+                </Button>
                 
-                <div>
-                  <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-1">
-                    Heure *
-                  </label>
-                  <input
-                    type="time"
-                    id="time"
-                    name="time"
-                    value={formData.time}
-                    onChange={handleChange}
-                    className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
-                    required
-                  />
-                </div>
-                
-                {timeError && (
-                  <div className="col-span-2">
-                    <p className="text-sm text-red-600">{timeError}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Veuillez choisir un créneau pendant les heures d'ouverture du salon
-                    </p>
-                  </div>
+                {step >= 6 && formData.clientName && selectedService && formData.staffId && selectedDate && formData.time && (
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-gray-900 hover:bg-gray-800"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Création...
+                      </>
+                    ) : (
+                      'Créer le rendez-vous'
+                    )}
+                  </Button>
                 )}
               </div>
-              
-              {/* Champ de notes */}
-              <div>
-                <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-                  Notes
-                </label>
-                <textarea
-                  id="notes"
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full bg-white px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
-                  placeholder="Notes supplémentaires (optionnel)"
-                />
-              </div>
-              
-              {/* Affichage des informations du service sélectionné */}
-              {selectedService && (
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-300 mt-4">
-                  <div className="flex justify-between">
-                    <span className="font-medium">{selectedService.title}</span>
-                    <span className="font-medium">{selectedService.price} €</span>
-                  </div>
-                  <div className="mt-1 text-sm text-gray-600">
-                    Durée: {Math.floor(selectedService.duration / 60)}h{selectedService.duration % 60 > 0 ? selectedService.duration % 60 : ''}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          <div className="bg-gray-50 px-6 py-4 flex justify-end space-x-3 rounded-b-lg sticky bottom-0">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
-              disabled={loading}
-            >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
-              disabled={loading}
-            >
-              {loading ? 'Création...' : 'Créer le rendez-vous'}
-            </button>
-          </div>
-        </form>
+            </form>
+          </>
+        )}
       </div>
     </div>
   );
