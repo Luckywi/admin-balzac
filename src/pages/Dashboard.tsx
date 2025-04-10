@@ -56,7 +56,7 @@ export default function Dashboard() {
               <div className="flex justify-center mb-6">
                 <button
                   onClick={() => setIsRdvModalOpen(true)}
-                  className="px-6 py-3 bg-gray-900 text-white rounded-md hover:bg-gray-900 transition-colors shadow-md text-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
+                  className="px-6 py-3 bg-gray-800 text-white rounded-md hover:bg-gray-800 transition-colors shadow-md text-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800"
                 >
                   CRÉER UN RDV
                 </button>
@@ -66,20 +66,20 @@ export default function Dashboard() {
               <div className="flex justify-center space-x-4 mb-6">
                 <button
                   onClick={() => handleStaffFilter('bea')}
-                  className={`px-5 py-2 ${staffFilter === 'bea' ? 'bg-green-700' : 'bg-gray-900'} text-white rounded-md hover:bg-gray-800 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700`}
+                  className={`px-5 py-2 ${staffFilter === 'bea' ? 'bg-rose-500' : 'bg-rose-500'} text-white rounded-md hover:bg-rose-600 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700`}
                 >
                   Béatrice {staffFilter === 'bea' && '✓'}
                 </button>
                 <button
                   onClick={() => handleStaffFilter('cyrille')}
-                  className={`px-5 py-2 ${staffFilter === 'cyrille' ? 'bg-blue-700' : 'bg-gray-900'} text-white rounded-md hover:bg-gray-800 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700`}
+                  className={`px-5 py-2 ${staffFilter === 'cyrille' ? 'bg-blue-500' : 'bg-blue-500'} text-white rounded-md hover:bg-blue-600 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700`}
                 >
                   Cyrille {staffFilter === 'cyrille' && '✓'}
                 </button>
                 {staffFilter && (
                   <button
                     onClick={() => setStaffFilter(undefined)}
-                    className="px-5 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    className="px-5 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-900 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
                   >
                     Réinitialiser
                   </button>

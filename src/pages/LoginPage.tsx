@@ -44,7 +44,7 @@ export default function LoginPage() {
   }, [])
 
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center bg-gray-900 text-white px-4 w-full">
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-gray-800 text-white px-4 w-full">
       {/* Logo et titre */}
       <div className="flex flex-col items-center mb-8">
         <img 

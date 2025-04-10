@@ -533,13 +533,13 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="bg-gray-900 px-6 py-4 rounded-t-lg sticky top-0 z-10">
+        <div className="bg-gray-800 px-6 py-4 rounded-t-lg sticky top-0 z-10">
           <h3 className="text-lg font-semibold text-white">Nouveau rendez-vous</h3>
         </div>
         
         {isGlobalLoading ? (
           <div className="p-8 flex flex-col items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-gray-900 mb-4" />
+            <Loader2 className="h-8 w-8 animate-spin text-gray-800 mb-4" />
             <p className="text-gray-600">Chargement des données...</p>
           </div>
         ) : (
@@ -570,7 +570,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                       name="clientName"
                       value={formData.clientName}
                       onChange={handleChange}
-                      className="w-full bg-white px-3 py-2 border border-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
+                      className="w-full bg-white px-3 py-2 border border-gray-800 rounded-md shadow-sm focus:outline-none focus:ring-gray-800 focus:border-gray-800"
                       placeholder="Nom et prénom"
                       required
                     />
@@ -587,7 +587,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                         name="clientPhone"
                         value={formData.clientPhone}
                         onChange={handleChange}
-                        className="w-full bg-white px-3 py-2 border border-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
+                        className="w-full bg-white px-3 py-2 border border-gray-800 rounded-md shadow-sm focus:outline-none focus:ring-gray-800 focus:border-gray-800"
                         placeholder="0612345678"
                       />
                     </div>
@@ -600,13 +600,13 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Service *
                     </label>
-                    <div className="border border-gray-900 rounded-md overflow-hidden">
+                    <div className="border border-gray-800 rounded-md overflow-hidden">
                       {selectedService ? (
                         <div 
                           className="p-3 flex justify-between items-center bg-gray-50 cursor-pointer"
                           onClick={() => setSelectedService(null)}
                         >
-                          <span className="font-medium text-gray-900">{selectedService.title}</span>
+                          <span className="font-medium text-gray-800">{selectedService.title}</span>
                           <button
                             type="button"
                             className="text-gray-500 hover:text-gray-700"
@@ -623,12 +623,12 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                         </div>
                       ) : (
                         sections.map(section => (
-                          <div key={section.id} className="border-b border-gray-900 last:border-b-0">
+                          <div key={section.id} className="border-b border-gray-800 last:border-b-0">
                             <div 
                               className="p-3 flex justify-between items-center bg-gray-50 cursor-pointer hover:bg-gray-100"
                               onClick={() => toggleSection(section.id)}
                             >
-                              <span className="font-medium text-gray-900">{section.title}</span>
+                              <span className="font-medium text-gray-800">{section.title}</span>
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 className={`h-5 w-5 transition-transform ${openSectionId === section.id ? 'transform rotate-180' : ''}`}
@@ -641,14 +641,14 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                             </div>
                             
                             {openSectionId === section.id && (
-                              <div className="border-t border-gray-900">
+                              <div className="border-t border-gray-800">
                                 {getServicesForSection(section.id).map(service => (
                                   <div
                                     key={service.id}
                                     className="p-3 pl-6 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 flex justify-between"
                                     onClick={() => handleSelectService(service)}
                                   >
-                                    <span className="text-gray-900">{service.title}</span>
+                                    <span className="text-gray-800">{service.title}</span>
                                     <span className="text-gray-600">{service.price} €</span>
                                   </div>
                                 ))}
@@ -680,7 +680,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                       name="staffId"
                       value={formData.staffId}
                       onChange={handleChange}
-                      className="w-full bg-white px-3 py-2 border border-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
+                      className="w-full bg-white px-3 py-2 border border-gray-800 rounded-md shadow-sm focus:outline-none focus:ring-gray-800 focus:border-gray-800"
                       required
                     >
                       <option value="" disabled>Sélectionnez un coiffeur</option>
@@ -706,7 +706,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Date *
                     </label>
-                    <div className="border border-gray-900 rounded-md overflow-hidden">
+                    <div className="border border-gray-800 rounded-md overflow-hidden">
                       <Calendar
                         mode="single"
                         selected={selectedDate}
@@ -740,10 +740,10 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                           <button
                             key={time}
                             type="button"
-                            className={`py-2 px-3 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-colors ${
+                            className={`py-2 px-3 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800 transition-colors ${
                               formData.time === time 
-                                ? 'bg-gray-900 text-white' 
-                                : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                                ? 'bg-gray-800 text-white' 
+                                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                             }`}
                             onClick={() => {
                               setFormData(prev => ({ ...prev, time }));
@@ -778,7 +778,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                       value={formData.notes}
                       onChange={handleChange}
                       rows={3}
-                      className="w-full bg-white px-3 py-2 border border-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
+                      className="w-full bg-white px-3 py-2 border border-gray-800 rounded-md shadow-sm focus:outline-none focus:ring-gray-800 focus:border-gray-800"
                       placeholder="Notes supplémentaires (optionnel)"
                     />
                   </div>
@@ -786,8 +786,8 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                 
                 {/* Récapitulatif du rendez-vous */}
                 {step >= 6 && selectedService && formData.time && (
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-900 mt-4">
-                    <h4 className="text-base font-medium text-gray-900 mb-3">Récapitulatif du rendez-vous</h4>
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-800 mt-4">
+                    <h4 className="text-base font-medium text-gray-800 mb-3">Récapitulatif du rendez-vous</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Client:</span>
@@ -852,7 +852,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="bg-gray-900 hover:bg-gray-800"
+                    className="bg-gray-800 hover:bg-gray-800"
                   >
                     {loading ? (
                       <>

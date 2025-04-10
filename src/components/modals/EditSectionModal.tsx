@@ -51,7 +51,7 @@ const EditSectionModal = ({ onClose, onSubmit, currentTitle, sectionId }: EditSe
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-        <div className="bg-gray-900 px-6 py-4 rounded-t-lg">
+        <div className="bg-gray-800 px-6 py-4 rounded-t-lg">
           <h3 className="text-lg font-medium text-white">Modifier la section</h3>
         </div>
         
@@ -69,7 +69,7 @@ const EditSectionModal = ({ onClose, onSubmit, currentTitle, sectionId }: EditSe
                   setTitle(e.target.value);
                   setError('');
                 }}
-                className="w-full bg-white px-3 py-2 border border-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900"
+                className="w-full bg-white px-3 py-2 border border-gray-800 rounded-md shadow-sm focus:outline-none focus:ring-gray-800 focus:border-gray-800"
                 disabled={isSubmitting}
               />
               {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
@@ -80,14 +80,14 @@ const EditSectionModal = ({ onClose, onSubmit, currentTitle, sectionId }: EditSe
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-900 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
+              className="px-4 py-2 border border-gray-800 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800"
               disabled={isSubmitting}
             >
               Annuler
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 flex items-center"
+              className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800 flex items-center"
               disabled={isSubmitting}
             >
               {isSubmitting ? (

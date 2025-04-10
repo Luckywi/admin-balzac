@@ -231,12 +231,12 @@ const Service = () => {
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div className="bg-gray-900 px-6 py-4">
+        <div className="bg-gray-800 px-6 py-4">
           <h2 className="text-xl font-semibold text-white">Services proposés</h2>
         </div>
         <div className="p-6 flex justify-center items-center h-64">
           <div className="flex flex-col items-center">
-            <svg className="animate-spin h-8 w-8 text-gray-900 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin h-8 w-8 text-gray-800 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -251,7 +251,7 @@ const Service = () => {
   if (error) {
     return (
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div className="bg-gray-900 px-6 py-4">
+        <div className="bg-gray-800 px-6 py-4">
           <h2 className="text-xl font-semibold text-white">Services proposés</h2>
         </div>
         <div className="p-6 flex justify-center items-center h-64">
@@ -261,12 +261,12 @@ const Service = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <p className="text-gray-900 font-medium mb-2">Erreur de chargement</p>
+            <p className="text-gray-800 font-medium mb-2">Erreur de chargement</p>
             <p className="text-gray-600 mb-4">{error}</p>
             <Button 
               onClick={loadData}
               variant="default"
-              className="bg-gray-900 hover:bg-gray-700"
+              className="bg-gray-800 hover:bg-gray-700"
             >
               Réessayer
             </Button>
@@ -279,12 +279,12 @@ const Service = () => {
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden">
       {/* En-tête */}
-      <div className="bg-gray-900 px-6 py-4 flex justify-between items-center">
+      <div className="bg-gray-800 px-6 py-4 flex justify-between items-center">
         <h2 className="text-xl font-semibold text-white">Services proposés</h2>
         <Button 
           onClick={() => setIsAddSectionModalOpen(true)}
           variant="secondary"
-          className="bg-white text-gray-900 hover:bg-gray-100"
+          className="bg-white text-gray-800 hover:bg-gray-100"
         >
           <PlusCircle className="mr-2 h-4 w-4" />
           Ajouter une section
@@ -300,22 +300,22 @@ const Service = () => {
                 <AccordionItem 
                   key={section.id} 
                   value={section.id}
-                  className="border border-gray-900 rounded-lg overflow-hidden"
+                  className="border border-gray-800 rounded-lg overflow-hidden"
                 >
                   <AccordionTrigger 
                     className="px-6 py-4 bg-gray-50 hover:bg-gray-100 flex justify-between items-center text-left"
                   >
-                    <div className="font-medium text-lg text-gray-900">{section.title}</div>
+                    <div className="font-medium text-lg text-gray-800">{section.title}</div>
                   </AccordionTrigger>
                   <AccordionContent className="p-0">
-                    <div className="border-t border-gray-900 p-4">
+                    <div className="border-t border-gray-800 p-4">
                       <div className="flex justify-between mb-4">
                         <div className="flex space-x-2">
                           <Button
                             onClick={() => openEditSectionModal(section.id)}
                             variant="outline"
                             size="sm"
-                            className="border-gray-900"
+                            className="border-gray-800"
                           >
                             <Edit className="h-4 w-4 mr-1" />
                             Modifier
@@ -333,7 +333,7 @@ const Service = () => {
                           onClick={() => openAddServiceModal(section.id)}
                           variant="default"
                           size="sm"
-                          className="bg-gray-900 hover:bg-gray-700"
+                          className="bg-gray-800 hover:bg-gray-700"
                         >
                           <PlusCircle className="h-4 w-4 mr-1" />
                           Ajouter un service
@@ -345,12 +345,12 @@ const Service = () => {
                           {section.services.map(service => (
                             <Card 
                               key={service.id} 
-                              className="border border-gray-900 hover:shadow-md transition-shadow"
+                              className="border border-gray-800 hover:shadow-md transition-shadow"
                             >
                               <CardHeader className="p-4 pb-2">
                                 <div className="flex justify-between items-start">
                                   <div>
-                                    <CardTitle className="text-base font-medium text-gray-900">{service.title}</CardTitle>
+                                    <CardTitle className="text-base font-medium text-gray-800">{service.title}</CardTitle>
                                     {service.description && (
                                       <CardDescription className="text-sm text-gray-600 mt-1">
                                         {service.description}
@@ -364,7 +364,7 @@ const Service = () => {
                                       size="sm"
                                       className="h-8 w-8 p-0"
                                     >
-                                      <Edit className="h-4 w-4 text-gray-500 hover:text-gray-900" />
+                                      <Edit className="h-4 w-4 text-gray-500 hover:text-gray-800" />
                                     </Button>
                                     <Button
                                       onClick={() => handleDeleteService(service.id)}
@@ -382,7 +382,7 @@ const Service = () => {
                                   <Scissors className="h-3 w-3" />
                                   {formatDuration(service.duration)}
                                 </Badge>
-                                <span className="font-bold text-gray-900">
+                                <span className="font-bold text-gray-800">
                                   {formatPrice(service.price)}
                                 </span>
                               </CardFooter>
@@ -402,13 +402,13 @@ const Service = () => {
           </div>
         ) : (
           <div className="text-center py-10 text-gray-500">
-            <Scissors className="h-12 w-12 mx-auto mb-4 text-gray-900" />
+            <Scissors className="h-12 w-12 mx-auto mb-4 text-gray-800" />
             <p className="text-lg font-medium mb-2">Aucune section configurée</p>
             <p className="mb-6">Commencez par ajouter une section pour organiser vos services</p>
             <Button
               onClick={() => setIsAddSectionModalOpen(true)}
               variant="default"
-              className="bg-gray-900 hover:bg-gray-700"
+              className="bg-gray-800 hover:bg-gray-700"
             >
               <PlusCircle className="mr-2 h-4 w-4" />
               Ajouter une section

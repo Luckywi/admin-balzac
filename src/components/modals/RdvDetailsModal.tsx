@@ -98,7 +98,7 @@ const RdvDetailsModal: React.FC<RdvDetailsModalProps> = ({ event, onClose, onRef
       <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
         {loading ? (
           <div className="flex justify-center items-center h-40">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-800"></div>
           </div>
         ) : (
           <>
@@ -120,7 +120,7 @@ const RdvDetailsModal: React.FC<RdvDetailsModalProps> = ({ event, onClose, onRef
               </h3>
               <button 
                 onClick={onClose} 
-                className="text-gray-900 hover:text-gray-700"
+                className="text-gray-800 hover:text-gray-700"
               >
                 ✕
               </button>
@@ -198,7 +198,7 @@ const RdvDetailsModal: React.FC<RdvDetailsModalProps> = ({ event, onClose, onRef
                   <div className="flex space-x-3">
                     <button
                       onClick={() => setConfirmDelete(false)}
-                      className="px-4 py-2 border border-gray-900 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                      className="px-4 py-2 border border-gray-800 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
                       disabled={isDeleting}
                     >
                       Non

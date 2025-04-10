@@ -359,13 +359,13 @@ const Calendar: React.FC<{ staffFilter?: string }> = ({ staffFilter }) => {
 
   const eventStyleGetter = (event: CalendarEvent) => {
     // On pourrait personnaliser la couleur en fonction du staffId ou du type de service
-    let backgroundColor = '#111827'; // Couleur par défaut
+    let backgroundColor = '#1f2937'; // Couleur par défaut
     
     // Exemple de personnalisation par coiffeur
     if (event.staffId === 'bea') {
-      backgroundColor = '#047857'; // Vert pour Béa
+      backgroundColor = '#f43f5e'; // Rose/rouge pour Béa
     } else if (event.staffId === 'cyrille') {
-      backgroundColor = '#1D4ED8'; // Bleu pour Cyrille
+      backgroundColor = '#3b82f6'; // Bleu électrique pour Cyrille
     }
     
     return {
@@ -507,7 +507,7 @@ const Calendar: React.FC<{ staffFilter?: string }> = ({ staffFilter }) => {
     <div className="calendar-container">
       {loading && (
         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-800"></div>
         </div>
       )}
       
