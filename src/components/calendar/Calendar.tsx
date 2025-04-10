@@ -5,7 +5,7 @@ import {
   SlotInfo,
 } from 'react-big-calendar'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
-import './Calendar.css'
+import './calendar.css'
 
 import { format as dfFormat, parse as dfParse, startOfWeek, getDay, isSameDay, isWithinInterval } from 'date-fns'
 import { fr } from 'date-fns/locale'
