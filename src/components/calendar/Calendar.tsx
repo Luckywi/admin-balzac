@@ -113,6 +113,7 @@ const Calendar: React.FC<{ staffFilter?: string }> = ({ staffFilter }) => {
   const [newRdvDate, setNewRdvDate] = useState<Date | null>(null);
   const [isCreatingRdv, setIsCreatingRdv] = useState(false);
 
+
   // États pour la configuration du salon et des coiffeurs
   const [salonConfig, setSalonConfig] = useState<SalonConfig | null>(null);
   const [staffAvailability, setStaffAvailability] = useState<StaffAvailability | null>(null);
@@ -129,7 +130,7 @@ const Calendar: React.FC<{ staffFilter?: string }> = ({ staffFilter }) => {
     const handleTouchEnd = (e: TouchEvent) => {
       touchEndX = e.changedTouches[0].screenX;
       const diff = touchStartX - touchEndX;
-      if (Math.abs(diff) < 50) return;
+      if (Math.abs(diff) < 120) return;
       const newDate = new Date(currentDate);
       newDate.setDate(newDate.getDate() + (diff > 0 ? (view === 'day' ? 1 : 7) : (view === 'day' ? -1 : -7)));
       setCurrentDate(newDate);
@@ -606,6 +607,15 @@ const Calendar: React.FC<{ staffFilter?: string }> = ({ staffFilter }) => {
           showMore: (total: number) => `+ ${total} événement(s)`
         }}
       />
+
+{selectedEvent && (
+  <RdvDetailsModal
+    event={selectedEvent}
+    onClose={() => setSelectedEvent(null)}
+    onRefresh={handleRefresh} // si tu veux reload les rdvs après suppression
+  />
+)}
+
 
       {/* Remplacer la modale simple par RdvDetailsModal */}
       {isCreatingRdv && newRdvDate && (
