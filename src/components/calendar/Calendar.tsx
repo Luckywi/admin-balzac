@@ -603,6 +603,7 @@ const handleTouchEnd = (e: TouchEvent) => {
         endAccessor="end"
         selectable
         defaultView={Views.WEEK}
+        dayLayoutAlgorithm="no-overlap"
         onSelectSlot={handleSelectSlot}
         onSelectEvent={handleSelectEvent}
         eventPropGetter={eventStyleGetter}

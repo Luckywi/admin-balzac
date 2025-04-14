@@ -6,6 +6,7 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
   position: relative;
 }
+
 .rbc-row-content {
   display: none !important;
 }
@@ -22,83 +23,82 @@
   display: none !important;
 }
 
-
 .rbc-header.rbc-day-closed{
-    background-color: #1f2937 !important;
-  }
+  background-color: #1f2937 !important;
+}
 
-.rbc-today .rb-header {
+.rb-header {
   background-color: #1f2937 !important;
   border-bottom: none !important;
 }
 
-
-.rbc-today {
-  background-color: #1f2937 !important;
-
-
- }
-
-.rbc-now {
-  background-color: #1f2937 !important;
- }
-
- .rbc-current-time-indicator {
-  background-color: #1f2937 !important;
-  height: 3px !important;
- }
-
-
- .rbc-time-gutter {
-  background-color: #1f2937 !important;
-  color: white !important;
-
- }
-
- .rbc-label{
-  color: white !important;
-  font-weight: 700 !important;
- }
-
- .rbc-event-content {
-  display: none !important;
- }
-
- .rbc-event-label {
-  font-weight: 700 !important;
- }
-
-
-
- .rbc-header.rbc-day-staff-off {
-  background-color: #1f2937 !important;
-
- }
-
-.rbc-day-slot.rbc-time-slot {
-  background-color: #1f2937 !important;
-
+.rbc-today .rbc-now{
+  background-color: white !important;
 }
 
+.rbc-toolbar-label{
+  padding: 0px !important;
+}
 
+.rbc-current-time-indicator {
+  background-color: #1f2937 !important;
+  height: 3px !important;
+}
 
+.rbc-time-gutter {
+  background-color: #1f2937 !important;
+  color: white !important;
+}
 
+.rbc-label{
+  color: white !important;
+  font-weight: 700 !important;
+}
 
-/* === Toolbar === */
+.rbc-event-content {
+  display: none !important;
+}
+
+.rbc-event-label {
+  font-weight: 700 !important;
+}
+
+.rbc-header.rbc-day-staff-off {
+  background-color: #1f2937 !important;
+}
+
+/* === Toolbar - NOUVEAU STYLE === */
 .rbc-toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
 }
 
+/* Titre centré et pleine largeur */
 .rbc-toolbar-label {
   font-size: 1.25rem;
   font-weight: 600;
   color: #1f2937;
+  width: 100%;
+  text-align: center;
+  order: 1;
+  margin-bottom: 0.5rem;
+}
+
+/* Groupe de boutons de navigation (aujourd'hui, précédent, suivant) */
+.rbc-btn-group:first-of-type {
+  order: 2;
+  margin-right: auto;
+}
+
+/* Groupe de boutons de vue (semaine, jour, agenda) */
+.rbc-btn-group:last-of-type {
+  order: 3;
+  margin-left: auto;
 }
 
 /* === Boutons de navigation RBC === */
@@ -115,28 +115,35 @@
 
 /* Hover = fond foncé, texte blanc */
 .rbc-btn-group button:hover {
-  background-color: #1f2937;
-  color: white;
+  background-color: #1f2937 !important;
+  color: white !important;
+  border-color: #1f2937 !important;
 }
 
 /* Focus (clic actif) = même effet que hover */
 .rbc-btn-group button:focus,
 .rbc-btn-group button:active {
   background-color: #1f2937 !important;
-  color: white !important ;
+  color: white !important;
   outline: none !important;
+  border-color: #1f2937 !important;
 }
 
-/* Bouton actif (ex: vue sélectionnée) */
+/* Bouton actif (ex: vue sélectionnée) - Force l'utilisation de notre couleur */
 .rbc-btn-group button.rbc-active {
-  background-color: #1f2937;
-  color: white;
-  border-color: #1f2937;
+  background-color: #1f2937 !important;
+  color: white !important;
+  border-color: #1f2937 !important;
 }
 
+/* S'assurer que la couleur reste sur hover d'un bouton actif */
+.rbc-btn-group button.rbc-active:hover {
+  background-color: #1f2937 !important;
+  color: white !important;
+  border-color: #1f2937 !important;
+}
 
 .rbc-time-header-gutter {
-
   background-color: #1f2937 !important;
 }
 
@@ -166,8 +173,10 @@
   font-weight: 600;
 }
 
-.rbc-time-slot .rbc-slot-closed {
+.rbc-time-gutter .rbc-slot-staff-off {
   background-color: #1f2937 !important;
+  color: white;
+  font-weight: 600;
 }
 
 element.style {
@@ -182,15 +191,6 @@ element.style {
 .rbc-off-range-bg {
   background-color: #f3f4f6;
 }
-
-.rbc-today {
-  background-color: #eff6ff;
-}
-
-/* === Jours fermés (colonne entière) === */
-
-
-
 
 /* === Événements === */
 .rbc-event {
@@ -215,23 +215,40 @@ element.style {
   background-color: transparent;
 }
 
-/* === Créneaux indisponibles === */
-
-
 /* === Responsive === */
-@media (max-width: 768px) {
+@media (min-width: 640px) {
   .rbc-toolbar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
   }
-
+  
   .rbc-toolbar-label {
-    margin: 0.5rem 0;
-    order: -1;
+    order: 1;
+    margin-bottom: 0;
   }
+  
+  .rbc-btn-group:first-of-type {
+    order: 2;
+    margin-right: 0;
+  }
+  
+  .rbc-btn-group:last-of-type {
+    order: 3;
+    margin-left: 0;
+  }
+}
 
+/* Sur mobile, rendre les boutons plus grands pour faciliter le toucher */
+@media (max-width: 639px) {
   .rbc-btn-group {
-    margin-bottom: 0.5rem;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .rbc-btn-group button {
+    padding: 0.75rem 1rem;
   }
 }

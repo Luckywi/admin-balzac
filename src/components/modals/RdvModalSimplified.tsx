@@ -169,14 +169,14 @@ const RdvModalSimplified = ({ date, onClose, onRefresh }: RdvModalSimplifiedProp
   return (
     <>
       <Dialog open onOpenChange={onClose}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto border-gray-800">
           <DialogHeader>
-            <DialogTitle>Créer un RDV - {format(date, 'dd MMMM yyyy', { locale: fr })}</DialogTitle>
+            <DialogTitle className="text-gray-800">Créer un RDV - {format(date, 'dd MMMM yyyy', { locale: fr })}</DialogTitle>
           </DialogHeader>
 
           {/* Step 1: Staff */}
           <div className="space-y-2">
-            <p className="text-sm font-medium">Choisir un coiffeur :</p>
+            <p className="text-sm font-medium text-gray-800">Choisir un coiffeur :</p>
             <div className="flex flex-wrap gap-2">
               {staffList.map(staff => (
                 <Button
@@ -188,6 +188,7 @@ const RdvModalSimplified = ({ date, onClose, onRefresh }: RdvModalSimplifiedProp
                     setSelectedTime(null);
                     setAvailableTimes([]);
                   }}
+                  className={staff.id === selectedStaff ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'border-gray-800 text-gray-800 hover:bg-gray-100'}
                 >
                   {staff.name}
                 </Button>
@@ -198,29 +199,32 @@ const RdvModalSimplified = ({ date, onClose, onRefresh }: RdvModalSimplifiedProp
           {/* Step 2: Services by section */}
           {selectedStaff && (
             <div className="mt-4">
-              <p className="text-sm font-medium mb-2">Choisir un service :</p>
-              <Accordion type="single" collapsible>
+              <p className="text-sm font-medium mb-2 text-gray-800">Choisir un service :</p>
+              <Accordion type="single" collapsible className="border-gray-800">
                 {sections.map(section => (
-                  <AccordionItem key={section.id} value={section.id}>
-                    <AccordionTrigger className="bg-transparent focus:outline-none focus:ring-0 no-underline hover:no-underline">
+                  <AccordionItem key={section.id} value={section.id} className="border-gray-300">
+                    <AccordionTrigger className="bg-transparent focus:outline-none focus:ring-0 no-underline hover:no-underline text-gray-800">
                       {section.title}
                     </AccordionTrigger>
                     <AccordionContent>
                       <div className="space-y-1">
                         {services.filter(s => s.sectionId === section.id).map(service => (
                          <Button
-                         key={service.id}
-                         variant={selectedService?.id === service.id ? 'default' : 'outline'}
-                         className="w-full justify-between no-underline hover:no-underline"
-                         onClick={() => {
-                           setSelectedService(service)
-                           setSelectedTime(null)
-                         }}
-                       >
-                         <span>{service.title}</span>
-                         <span>{service.price}€</span>
-                       </Button>
-                       
+                           key={service.id}
+                           variant={selectedService?.id === service.id ? 'default' : 'outline'}
+                           className={`w-full justify-between no-underline hover:no-underline ${
+                             selectedService?.id === service.id 
+                               ? 'bg-gray-800 hover:bg-gray-700 text-white' 
+                               : 'border-gray-800 text-gray-800 hover:bg-gray-100'
+                           }`}
+                           onClick={() => {
+                             setSelectedService(service)
+                             setSelectedTime(null)
+                           }}
+                         >
+                           <span>{service.title}</span>
+                           <span>{service.price}€</span>
+                         </Button>
                         ))}
                       </div>
                     </AccordionContent>
@@ -233,13 +237,17 @@ const RdvModalSimplified = ({ date, onClose, onRefresh }: RdvModalSimplifiedProp
           {/* Step 3: Horaires */}
           {selectedService && availableTimes.length > 0 && (
             <div className="mt-4">
-              <p className="text-sm font-medium mb-2">Créneaux disponibles :</p>
+              <p className="text-sm font-medium mb-2 text-gray-800">Créneaux disponibles :</p>
               <div className="grid grid-cols-3 gap-2">
                 {availableTimes.map(time => (
                   <Button
                     key={time}
                     variant={selectedTime === time ? 'default' : 'outline'}
                     onClick={() => setSelectedTime(time)}
+                    className={selectedTime === time 
+                      ? 'bg-gray-800 hover:bg-gray-700 text-white' 
+                      : 'border-gray-800 text-gray-800 hover:bg-gray-100'
+                    }
                   >
                     {time}
                   </Button>
@@ -252,25 +260,35 @@ const RdvModalSimplified = ({ date, onClose, onRefresh }: RdvModalSimplifiedProp
 
       {/* Sous-modale : Résumé de rendez-vous */}
       <Dialog open={showSummary} onOpenChange={(open) => { if (!open) setShowSummary(false); }}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md border-gray-800">
           <DialogHeader>
-            <DialogTitle>Récapitulatif du rendez-vous</DialogTitle>
+            <DialogTitle className="text-gray-800">Récapitulatif du rendez-vous</DialogTitle>
           </DialogHeader>
 
           {selectedService && selectedStaff && selectedTime && (
             <div className="space-y-2 text-sm">
-              <p><strong>Service :</strong> {selectedService.title}</p>
-              <p><strong>Coiffeur :</strong> {staffList.find(s => s.id === selectedStaff)?.name}</p>
-              <p><strong>Date :</strong> {format(date, 'dd MMMM yyyy', { locale: fr })}</p>
-              <p><strong>Heure :</strong> {selectedTime}</p>
-              <p><strong>Durée :</strong> {selectedService.duration} min</p>
-              <p><strong>Prix :</strong> {selectedService.price} €</p>
+              <p className="text-gray-800"><strong>Service :</strong> {selectedService.title}</p>
+              <p className="text-gray-800"><strong>Coiffeur :</strong> {staffList.find(s => s.id === selectedStaff)?.name}</p>
+              <p className="text-gray-800"><strong>Date :</strong> {format(date, 'dd MMMM yyyy', { locale: fr })}</p>
+              <p className="text-gray-800"><strong>Heure :</strong> {selectedTime}</p>
+              <p className="text-gray-800"><strong>Durée :</strong> {selectedService.duration} min</p>
+              <p className="text-gray-800"><strong>Prix :</strong> {selectedService.price} €</p>
             </div>
           )}
 
           <div className="mt-4 flex justify-between">
-            <Button variant="outline" onClick={() => setShowSummary(false)}>Modifier</Button>
-            <Button onClick={handleCreateRdv} disabled={loading}>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowSummary(false)}
+              className="border-gray-800 text-gray-800 hover:bg-gray-100"
+            >
+              Modifier
+            </Button>
+            <Button 
+              onClick={handleCreateRdv} 
+              disabled={loading}
+              className="bg-gray-800 hover:bg-gray-700 text-white"
+            >
               Confirmer
             </Button>
           </div>

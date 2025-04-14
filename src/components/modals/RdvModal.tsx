@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
-import { isWithinInterval, format, addMinutes, isSameDay, parseISO } from 'date-fns';
+import { format, addMinutes } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
+import { generateAvailableTimeSlots } from '../../lib/availability'; // Importer la fonction d'availability.ts
 
 interface RdvModalProps {
   isOpen: boolean;
@@ -104,7 +104,6 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
   const [openSectionId, setOpenSectionId] = useState<string | null>(null);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
-
   // États pour la configuration et les disponibilités
   const [salonConfig, setSalonConfig] = useState<SalonConfig | null>(null);
   const [staffAvailability, setStaffAvailability] = useState<StaffAvailability | null>(null);
@@ -143,10 +142,18 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
 
   // Effet pour mettre à jour les créneaux disponibles quand la date change
   useEffect(() => {
-    if (selectedDate && formData.staffId && selectedService) {
-      generateAvailableTimeSlots(selectedDate, formData.staffId, selectedService.duration);
+    if (selectedDate && formData.staffId && selectedService && salonConfig && staffAvailability) {
+      const slots = generateAvailableTimeSlots(
+        selectedDate,
+        formData.staffId,
+        selectedService.duration,
+        salonConfig,
+        staffAvailability,
+        existingRdvs
+      );
+      setAvailableTimeSlots(slots);
     }
-  }, [selectedDate, formData.staffId, selectedService]);
+  }, [selectedDate, formData.staffId, selectedService, salonConfig, staffAvailability, existingRdvs]);
 
   // Effet pour mettre à jour le champ date dans formData
   useEffect(() => {
@@ -195,12 +202,10 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
   const loadStaffMembers = async () => {
     try {
       const staffSnapshot = await getDocs(collection(db, 'staff'));
-      const staffData = staffSnapshot.docs.map(doc => {
-        return {
-          id: doc.id,
-          name: doc.id.charAt(0).toUpperCase() + doc.id.slice(1)
-        };
-      });
+      const staffData = staffSnapshot.docs.map(doc => ({
+        id: doc.id,
+        name: doc.id.charAt(0).toUpperCase() + doc.id.slice(1)
+      }));
       
       setStaffMembers(staffData);
     } catch (err) {
@@ -263,158 +268,46 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
     }
   };
 
-  // Vérifier si une date est un jour de fermeture du salon
-  const isSalonClosed = (date: Date): boolean => {
-    if (!salonConfig) return true;
-    
-    // Vérifier si c'est un jour de fermeture hebdomadaire
-    const dayOfWeek = DAYS_OF_WEEK[date.getDay()];
-    if (!salonConfig.workDays[dayOfWeek]) {
-      return true;
-    }
-    
-    // Vérifier si c'est un jour de fermeture exceptionnel (vacances)
-    const vacationClosed = salonConfig.vacations.some(vacation => {
-      const startDate = new Date(vacation.startDate);
-      const endDate = new Date(vacation.endDate);
-      endDate.setHours(23, 59, 59, 999); // Inclure le jour de fin complet
-      
-      return isWithinInterval(date, { start: startDate, end: endDate });
-    });
-    
-    return vacationClosed;
-  };
-
-  // Vérifier si c'est un jour où le staff ne travaille pas
-  const isStaffDayOff = (date: Date): boolean => {
-    if (!staffAvailability) return true;
-    
-    const dayOfWeek = DAYS_OF_WEEK[date.getDay()];
-    
-    // Vérifier si c'est un jour de repos hebdomadaire
-    if (!staffAvailability.workingHours[dayOfWeek]?.working) {
-      return true;
-    }
-    
-    // Vérifier si c'est un jour de vacances
-    return staffAvailability.vacations.some(vacation => {
-      const startDate = new Date(vacation.startDate);
-      const endDate = new Date(vacation.endDate);
-      endDate.setHours(23, 59, 59, 999); // Inclure le jour de fin complet
-      
-      return isWithinInterval(date, { start: startDate, end: endDate });
-    });
-  };
-  
-  // Fonction pour générer les créneaux horaires disponibles
-  const generateAvailableTimeSlots = (date: Date, staffId: string, duration: number) => {
-    if (!salonConfig || !staffAvailability) {
-      setAvailableTimeSlots([]);
-      return;
-    }
-    
-    const dayOfWeek = DAYS_OF_WEEK[date.getDay()];
-    const salonHours = salonConfig.workHours[dayOfWeek];
-    const staffDaySchedule = staffAvailability.workingHours[dayOfWeek];
-    
-    if (!salonHours || !staffDaySchedule || !staffDaySchedule.working) {
-      setAvailableTimeSlots([]);
-      return;
-    }
-    
-    // Trouver l'intersection des heures du salon et du staff
-    const workRanges: {start: string, end: string}[] = [];
-    
-    for (const staffRange of staffDaySchedule.ranges) {
-      // Vérifier que la plage du staff est dans les heures d'ouverture du salon
-      if (staffRange.start < salonHours.end && staffRange.end > salonHours.start) {
-        // Prendre l'intersection
-        const rangeStart = staffRange.start < salonHours.start ? salonHours.start : staffRange.start;
-        const rangeEnd = staffRange.end > salonHours.end ? salonHours.end : staffRange.end;
-        
-        workRanges.push({ start: rangeStart, end: rangeEnd });
-      }
-    }
-    
-    if (workRanges.length === 0) {
-      setAvailableTimeSlots([]);
-      return;
-    }
-    
-    // Récupérer les pauses du salon et du staff pour ce jour
-    const salonBreaks = salonConfig.breaks.filter(b => b.day === dayOfWeek);
-    const staffBreaks = staffAvailability.breaks.filter(b => b.day === dayOfWeek);
-    
-    // Récupérer les rendez-vous existants pour ce staff et cette date
-    const dateString = format(date, 'yyyy-MM-dd');
-    const dayRdvs = existingRdvs.filter(rdv => {
-      return rdv.staffId === staffId && rdv.start.startsWith(dateString);
-    });
-    
-    // Générer les créneaux disponibles par intervalles de 15 minutes
-    const slots: string[] = [];
-    
-    workRanges.forEach(range => {
-      let currentTime = range.start;
-      
-      while (currentTime <= range.end) {
-        // Vérifier si ce créneau chevauche une pause du salon
-        const isSalonBreak = salonBreaks.some(breakItem => {
-          return currentTime >= breakItem.start && currentTime < breakItem.end;
-        });
-        
-        // Vérifier si ce créneau chevauche une pause du staff
-        const isStaffBreak = staffBreaks.some(breakItem => {
-          return currentTime >= breakItem.start && currentTime < breakItem.end;
-        });
-        
-        // Vérifier si le créneau + durée du service chevauche un rendez-vous existant
-        const [hours, minutes] = currentTime.split(':').map(Number);
-        const slotStart = new Date(date);
-        slotStart.setHours(hours, minutes, 0, 0);
-        
-        const slotEnd = addMinutes(slotStart, duration);
-        const slotEndTime = format(slotEnd, 'HH:mm');
-        
-        // Vérifier que la fin du créneau reste dans les heures travaillées
-        if (slotEndTime > range.end) {
-          // Créneau trop long pour cette plage horaire
-          break;
-        }
-        
-        const conflictsWithExistingRdv = dayRdvs.some(rdv => {
-          const rdvStart = new Date(rdv.start);
-          const rdvEnd = new Date(rdv.end);
-          
-          // Vérifier s'il y a chevauchement
-          return (
-            (slotStart < rdvEnd && slotEnd > rdvStart)
-          );
-        });
-        
-        // Si le créneau est disponible, l'ajouter
-        if (!isSalonBreak && !isStaffBreak && !conflictsWithExistingRdv) {
-          slots.push(currentTime);
-        }
-        
-        // Passer au créneau suivant (par incréments de 15 minutes)
-        const currentDate = new Date();
-        const [h, m] = currentTime.split(':').map(Number);
-        currentDate.setHours(h, m + 15, 0, 0);
-        currentTime = format(currentDate, 'HH:mm');
-      }
-    });
-    
-    setAvailableTimeSlots(slots);
-  };
-
   // Fonction pour désactiver les dates dans le calendrier
   const isDateDisabled = (date: Date) => {
     const isBeforeToday = date < new Date(new Date().setHours(0, 0, 0, 0));
-    const isClosed = isSalonClosed(date);
-    const isStaffOff = formData.staffId ? isStaffDayOff(date) : false;
     
-    return isBeforeToday || isClosed || isStaffOff;
+    if (isBeforeToday) return true;
+    
+    if (!salonConfig) return true;
+    
+    const dayOfWeek = DAYS_OF_WEEK[date.getDay()];
+    
+    // Vérifier si le salon est fermé ce jour-là
+    if (!salonConfig.workDays[dayOfWeek]) return true;
+    
+    // Vérifier si le salon est en vacances
+    const isSalonOnVacation = salonConfig.vacations.some(vacation => {
+      const start = new Date(vacation.startDate);
+      const end = new Date(vacation.endDate);
+      end.setHours(23, 59, 59, 999);
+      return date >= start && date <= end;
+    });
+    
+    if (isSalonOnVacation) return true;
+    
+    // Vérifier si le staff est disponible ce jour-là
+    if (formData.staffId && staffAvailability) {
+      // Vérifier si le staff travaille ce jour
+      if (!staffAvailability.workingHours[dayOfWeek]?.working) return true;
+      
+      // Vérifier si le staff est en vacances
+      const isStaffOnVacation = staffAvailability.vacations.some(vacation => {
+        const start = new Date(vacation.startDate);
+        const end = new Date(vacation.endDate);
+        end.setHours(23, 59, 59, 999);
+        return date >= start && date <= end;
+      });
+      
+      if (isStaffOnVacation) return true;
+    }
+    
+    return false;
   };
 
   // Gérer les changements de champs du formulaire
@@ -482,6 +375,15 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
       
       // Construire l'objet du RDV
       const startDateTime = new Date(`${formData.date}T${formData.time}`);
+      
+      // Vérifier si la date de début est passée
+      const now = new Date();
+      if (startDateTime <= now) {
+        setError("Impossible de créer un rendez-vous dans le passé.");
+        setLoading(false);
+        return;
+      }
+      
       const endDateTime = new Date(startDateTime.getTime() + selectedService.duration * 60000);
       
       const rdvData = {
@@ -711,34 +613,33 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                       Date *
                     </label>
                     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-  <PopoverTrigger asChild>
-    <Button variant="outline" onClick={() => setIsPopoverOpen(true)}>
-      {selectedDate ? format(selectedDate, 'dd MMMM yyyy', { locale: fr }) : 'Choisir une date'}
-    </Button>
-  </PopoverTrigger>
-  <PopoverContent className="w-auto p-0" align="start">
-    <Calendar
-      mode="single"
-      selected={selectedDate}
-      onSelect={(date) => {
-        if (date) {
-          setSelectedDate(date);
-          setFormData(prev => ({
-            ...prev,
-            date: format(date, 'yyyy-MM-dd')
-          }));
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" onClick={() => setIsPopoverOpen(true)}>
+                          {selectedDate ? format(selectedDate, 'dd MMMM yyyy', { locale: fr }) : 'Choisir une date'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={(date) => {
+                            if (date) {
+                              setSelectedDate(date);
+                              setFormData(prev => ({
+                                ...prev,
+                                date: format(date, 'yyyy-MM-dd')
+                              }));
 
-          setStep(prev => Math.max(prev, 5)); // ✅ Passe à l’étape 5
-          setIsPopoverOpen(false);            // ✅ Ferme le popover
-        }
-      }}
-      locale={fr}
-      disabled={isDateDisabled}
-      className="rounded-md border"
-    />
-  </PopoverContent>
-</Popover>
-
+                              setStep(prev => Math.max(prev, 5));
+                              setIsPopoverOpen(false);
+                            }
+                          }}
+                          locale={fr}
+                          disabled={isDateDisabled}
+                          className="rounded-md border"
+                        />
+                      </PopoverContent>
+                    </Popover>
 
                     {selectedDate && (
                       <p className="mt-2 text-sm text-gray-600">

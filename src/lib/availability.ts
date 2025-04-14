@@ -54,6 +54,9 @@ export function generateAvailableTimeSlots(
   staffAvailability: StaffAvailability,
   existingRdvs: Rdv[]
 ): string[] {
+  // Récupérer l'heure actuelle pour vérifier les créneaux passés
+  const now = new Date();
+  
   const dayOfWeek = DAYS_OF_WEEK[date.getDay()];
 
   // Vérifier si le salon est fermé ce jour-là
@@ -116,6 +119,9 @@ export function generateAvailableTimeSlots(
 
       if (slotEndTime > range.end) break;
 
+      // Vérifier si le créneau est dans le passé
+      const isPastSlot = slotStart <= now;
+      
       const isSalonBreak = salonBreaks.some(b => currentTime >= b.start && currentTime < b.end);
       const isStaffBreak = staffBreaks.some(b => currentTime >= b.start && currentTime < b.end);
 
@@ -125,7 +131,8 @@ export function generateAvailableTimeSlots(
         return slotStart < rdvEnd && slotEnd > rdvStart;
       });
 
-      if (!isSalonBreak && !isStaffBreak && !conflictsWithExisting) {
+      // Ne pas ajouter le créneau s'il est dans le passé ou s'il y a un conflit
+      if (!isPastSlot && !isSalonBreak && !isStaffBreak && !conflictsWithExisting) {
         slots.push(currentTime);
       }
 
