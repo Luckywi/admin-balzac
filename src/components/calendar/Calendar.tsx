@@ -121,20 +121,40 @@ const Calendar: React.FC<{ staffFilter?: string }> = ({ staffFilter }) => {
 
   useEffect(() => {
     let touchStartX = 0;
-    let touchEndX = 0;
-  
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartX = e.changedTouches[0].screenX;
-    };
-  
-    const handleTouchEnd = (e: TouchEvent) => {
-      touchEndX = e.changedTouches[0].screenX;
-      const diff = touchStartX - touchEndX;
-      if (Math.abs(diff) < 120) return;
-      const newDate = new Date(currentDate);
-      newDate.setDate(newDate.getDate() + (diff > 0 ? (view === 'day' ? 1 : 7) : (view === 'day' ? -1 : -7)));
-      setCurrentDate(newDate);
-    };
+let touchStartY = 0;
+
+const handleTouchStart = (e: TouchEvent) => {
+  touchStartX = e.changedTouches[0].screenX;
+  touchStartY = e.changedTouches[0].screenY;
+};
+
+const handleTouchEnd = (e: TouchEvent) => {
+  const touchEndX = e.changedTouches[0].screenX;
+  const touchEndY = e.changedTouches[0].screenY;
+
+  const diffX = touchEndX - touchStartX;
+  const diffY = touchEndY - touchStartY;
+
+  // Ne rien faire si le geste est plus vertical qu’horizontal
+  if (Math.abs(diffY) > Math.abs(diffX)) return;
+
+  // Ne rien faire si le swipe est trop court (pour éviter les faux positifs)
+  if (Math.abs(diffX) < 130) return;
+
+  const direction = diffX > 0 ? 'left' : 'right';
+
+  const newDate = new Date(currentDate);
+  const offset = view === 'day' ? 1 : 7;
+
+  if (direction === 'right') {
+    newDate.setDate(newDate.getDate() - offset);
+  } else {
+    newDate.setDate(newDate.getDate() + offset);
+  }
+
+  setCurrentDate(newDate);
+};
+
   
     const calendarEl = document.querySelector('.rbc-time-view') || document.querySelector('.rbc-month-view');
     if (calendarEl) {
@@ -588,7 +608,7 @@ const Calendar: React.FC<{ staffFilter?: string }> = ({ staffFilter }) => {
         eventPropGetter={eventStyleGetter}
         dayPropGetter={dayPropGetter}
         slotPropGetter={slotPropGetter}
-        style={{ height: 'calc(100vh - 120px)' }}
+        style={{ height: 'calc(100vh - 140px)' }}
         min={new Date(0, 0, 0, 8, 0)}
         max={new Date(0, 0, 0, 20, 0)}
         messages={{
