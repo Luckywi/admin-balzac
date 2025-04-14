@@ -40,7 +40,12 @@
  }
 
 .rbc-now {
-  background-color: white !important;
+  background-color: #1f2937 !important;
+ }
+
+ .rbc-current-time-indicator {
+  background-color: #1f2937 !important;
+  height: 3px !important;
  }
 
 
