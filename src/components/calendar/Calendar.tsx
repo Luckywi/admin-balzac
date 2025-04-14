@@ -16,6 +16,8 @@ import { db } from '../../lib/firebase';
 import RdvDetailsModal from '../modals/RdvDetailsModal';
 import { DayOfWeek } from '../../types/Salon';
 import { StaffAvailability, TimeRange, Break, Vacation } from '../../types/Staff';
+import RdvModalSimplified from '../modals/RdvModalSimplified';
+
 
 // Locales disponibles
 const locales = { fr }
@@ -108,10 +110,46 @@ const Calendar: React.FC<{ staffFilter?: string }> = ({ staffFilter }) => {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<ViewKey>('week');
+  const [newRdvDate, setNewRdvDate] = useState<Date | null>(null);
+  const [isCreatingRdv, setIsCreatingRdv] = useState(false);
 
   // États pour la configuration du salon et des coiffeurs
   const [salonConfig, setSalonConfig] = useState<SalonConfig | null>(null);
   const [staffAvailability, setStaffAvailability] = useState<StaffAvailability | null>(null);
+
+
+  useEffect(() => {
+    let touchStartX = 0;
+    let touchEndX = 0;
+  
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX = e.changedTouches[0].screenX;
+    };
+  
+    const handleTouchEnd = (e: TouchEvent) => {
+      touchEndX = e.changedTouches[0].screenX;
+      const diff = touchStartX - touchEndX;
+      if (Math.abs(diff) < 50) return;
+      const newDate = new Date(currentDate);
+      newDate.setDate(newDate.getDate() + (diff > 0 ? (view === 'day' ? 1 : 7) : (view === 'day' ? -1 : -7)));
+      setCurrentDate(newDate);
+    };
+  
+    const calendarEl = document.querySelector('.rbc-time-view') || document.querySelector('.rbc-month-view');
+    if (calendarEl) {
+      calendarEl.addEventListener('touchstart', handleTouchStart as EventListener);
+      calendarEl.addEventListener('touchend', handleTouchEnd as EventListener);
+    }
+  
+    return () => {
+      if (calendarEl) {
+        calendarEl.removeEventListener('touchstart', handleTouchStart as EventListener);
+        calendarEl.removeEventListener('touchend', handleTouchEnd as EventListener);
+      }
+    };
+  }, [currentDate, view]);
+  
+
 
   // Récupérer les rendez-vous depuis Firestore
   useEffect(() => {
@@ -189,6 +227,8 @@ const Calendar: React.FC<{ staffFilter?: string }> = ({ staffFilter }) => {
     
     loadSalonConfig();
   }, []);
+
+  
 
   // Récupérer les disponibilités du coiffeur si un filtre est appliqué
   useEffect(() => {
@@ -331,17 +371,20 @@ const Calendar: React.FC<{ staffFilter?: string }> = ({ staffFilter }) => {
   };
 
   const handleSelectSlot = (slotInfo: SlotInfo) => {
-    console.log('Créneau sélectionné:', slotInfo);
-    
-    // Si le créneau est indisponible, empêcher la création de RDV
-    if (isUnavailableSlot(slotInfo.start, slotInfo.end)) {
-      console.log("Ce créneau n'est pas disponible (hors horaires d'ouverture, pendant une pause, ou jour de repos)");
-      // Ici, on pourrait afficher une notification à l'utilisateur
+    const now = new Date();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (slotInfo.start < today) {
+      alert("Impossible de créer un rendez-vous dans le passé.");
       return;
     }
-    
-    // Ici vous pourriez ouvrir une modale pour créer un RDV à cette date/heure
-  }
+    if (isUnavailableSlot(slotInfo.start, slotInfo.end)) {
+      console.log("Créneau non disponible.");
+      return;
+    }
+    setNewRdvDate(slotInfo.start);
+    setIsCreatingRdv(true);
+  };
 
   const handleSelectEvent = (event: CalendarEvent) => {
     setSelectedEvent(event);
@@ -503,6 +546,8 @@ const Calendar: React.FC<{ staffFilter?: string }> = ({ staffFilter }) => {
     return {};
   }
 
+  
+
   return (
     <div className="calendar-container">
       {loading && (
@@ -563,13 +608,14 @@ const Calendar: React.FC<{ staffFilter?: string }> = ({ staffFilter }) => {
       />
 
       {/* Remplacer la modale simple par RdvDetailsModal */}
-      {selectedEvent && (
-        <RdvDetailsModal 
-          event={selectedEvent} 
-          onClose={handleCloseModal} 
-          onRefresh={handleRefresh}
-        />
-      )}
+      {isCreatingRdv && newRdvDate && (
+  <RdvModalSimplified
+    date={newRdvDate}
+    onClose={() => setIsCreatingRdv(false)}
+    onRefresh={handleRefresh}
+  />
+)}
+
     </div>
   )
 }

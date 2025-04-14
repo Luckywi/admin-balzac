@@ -6,6 +6,8 @@ import { fr } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
 
 interface RdvModalProps {
   isOpen: boolean;
@@ -100,6 +102,8 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
   const [existingRdvs, setExistingRdvs] = useState<Rdv[]>([]);
   const [openSectionId, setOpenSectionId] = useState<string | null>(null);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+
 
   // États pour la configuration et les disponibilités
   const [salonConfig, setSalonConfig] = useState<SalonConfig | null>(null);
@@ -706,19 +710,36 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Date *
                     </label>
-                    <div className="border border-gray-800 rounded-md overflow-hidden">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={date => {
-                          setSelectedDate(date);
-                          if (date) setStep(Math.max(step, 5));
-                        }}
-                        locale={fr}
-                        disabled={isDateDisabled}
-                        className="rounded-md"
-                      />
-                    </div>
+                    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+  <PopoverTrigger asChild>
+    <Button variant="outline" onClick={() => setIsPopoverOpen(true)}>
+      {selectedDate ? format(selectedDate, 'dd MMMM yyyy', { locale: fr }) : 'Choisir une date'}
+    </Button>
+  </PopoverTrigger>
+  <PopoverContent className="w-auto p-0" align="start">
+    <Calendar
+      mode="single"
+      selected={selectedDate}
+      onSelect={(date) => {
+        if (date) {
+          setSelectedDate(date);
+          setFormData(prev => ({
+            ...prev,
+            date: format(date, 'yyyy-MM-dd')
+          }));
+
+          setStep(prev => Math.max(prev, 5)); // ✅ Passe à l’étape 5
+          setIsPopoverOpen(false);            // ✅ Ferme le popover
+        }
+      }}
+      locale={fr}
+      disabled={isDateDisabled}
+      className="rounded-md border"
+    />
+  </PopoverContent>
+</Popover>
+
+
                     {selectedDate && (
                       <p className="mt-2 text-sm text-gray-600">
                         Date sélectionnée: {format(selectedDate, 'dd MMMM yyyy', { locale: fr })}
