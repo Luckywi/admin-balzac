@@ -242,43 +242,73 @@ const EditServiceModal = ({ onClose, onSubmit, currentService, serviceId }: Edit
               {errors.originalPrice && <p className="mt-1 text-sm text-red-600">{errors.originalPrice}</p>}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="discount" className="text-sm font-medium text-gray-700">
-                Réduction
-              </Label>
-              <Select
-                value={serviceData.discount}
-                onValueChange={handleDiscountChange}
-              >
-                <SelectTrigger className="w-full border border-gray-800 rounded-md bg-white text-gray-800 shadow-sm focus:border-gray-800 focus:ring-gray-800">
-                  <SelectValue placeholder="Sélectionner une réduction" />
-                </SelectTrigger>
-                <SelectContent>
-                  {discountOptions.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.discount && <p className="mt-1 text-sm text-red-600">{errors.discount}</p>}
-
-              {serviceData.discount && serviceData.originalPrice && (
-  <div className="mt-2 text-sm text-gray-600 flex items-center">
-    <span className="mr-2">Prix après réduction:</span>
-    <span className="font-medium text-red-600">
-      {calculateDiscountedPrice(
-        parseFloat(serviceData.originalPrice),
-        serviceData.discount
-      ).toFixed(2)} €
-    </span>
-    <span className="ml-2 text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">
-      {Math.abs(parseInt(serviceData.discount))}% de réduction
-    </span>
+<div className="space-y-2">
+  <Label htmlFor="discount" className="text-sm font-medium text-gray-700">
+    Réduction
+  </Label>
+  <div className="flex flex-wrap gap-2">
+    <button
+      type="button"
+      onClick={() => handleDiscountChange("")}
+      className={`px-3 py-1.5 rounded-md border ${
+        serviceData.discount === "" 
+          ? "bg-gray-800 text-white" 
+          : "border-gray-800 text-gray-800 hover:bg-gray-100"
+      }`}
+    >
+      Aucune
+    </button>
+    <button
+      type="button"
+      onClick={() => handleDiscountChange("-15")}
+      className={`px-3 py-1.5 rounded-md border ${
+        serviceData.discount === "-15" 
+          ? "bg-red-600 text-white" 
+          : "border-red-600 text-red-600 hover:bg-red-50"
+      }`}
+    >
+      15%
+    </button>
+    <button
+      type="button"
+      onClick={() => handleDiscountChange("-30")}
+      className={`px-3 py-1.5 rounded-md border ${
+        serviceData.discount === "-30" 
+          ? "bg-red-600 text-white" 
+          : "border-red-600 text-red-600 hover:bg-red-50"
+      }`}
+    >
+      30%
+    </button>
+    <button
+      type="button"
+      onClick={() => handleDiscountChange("-50")}
+      className={`px-3 py-1.5 rounded-md border ${
+        serviceData.discount === "-50" 
+          ? "bg-red-600 text-white" 
+          : "border-red-600 text-red-600 hover:bg-red-50"
+      }`}
+    >
+      50%
+    </button>
   </div>
-)}
+  {errors.discount && <p className="mt-1 text-sm text-red-600">{errors.discount}</p>}
 
-            </div>
+  {serviceData.discount && serviceData.originalPrice && (
+    <div className="mt-2 text-sm text-gray-600 flex items-center">
+      <span className="mr-2">Prix après réduction:</span>
+      <span className="font-medium text-red-600">
+        {calculateDiscountedPrice(
+          parseFloat(serviceData.originalPrice),
+          serviceData.discount
+        ).toFixed(2)} €
+      </span>
+      <span className="ml-2 text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">
+        {Math.abs(parseInt(serviceData.discount))}% de réduction
+      </span>
+    </div>
+  )}
+</div>
           </div>
 
           <div className="bg-gray-50 px-6 py-4 flex justify-end space-x-3 rounded-b-lg sticky bottom-0">
