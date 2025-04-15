@@ -36,7 +36,9 @@ interface Service {
   title: string;
   description: string;
   duration: number;
-  price: number;
+  originalPrice: number;
+  discountedPrice?: number;
+  discount?: number;
   sectionId: string;
 }
 
@@ -95,7 +97,16 @@ const RdvModalSimplified = ({ date, onClose, onRefresh }: RdvModalSimplifiedProp
       setSections(sectionsSnap.docs.map(doc => ({ id: doc.id, title: doc.data().title })));
 
       const servicesSnap = await getDocs(collection(db, 'services'));
-      setServices(servicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Service)));
+      setServices(servicesSnap.docs.map(doc => ({ 
+        id: doc.id, 
+        title: doc.data().title,
+        description: doc.data().description || '',
+        duration: doc.data().duration || 30,
+        originalPrice: doc.data().originalPrice || 0,
+        discountedPrice: doc.data().discountedPrice,
+        discount: doc.data().discount,
+        sectionId: doc.data().sectionId
+      })));
 
       const salonSnap = await getDoc(doc(db, 'salon', 'config'));
       if (salonSnap.exists()) setSalonConfig(salonSnap.data() as SalonConfig);
@@ -142,6 +153,9 @@ const RdvModalSimplified = ({ date, onClose, onRefresh }: RdvModalSimplifiedProp
     const startDateTime = new Date(`${format(date, 'yyyy-MM-dd')}T${selectedTime}`);
     const endDateTime = addMinutes(startDateTime, selectedService.duration);
 
+    // Utiliser le prix original
+    const price = selectedService.originalPrice;
+
     const rdvData = {
       serviceId: selectedService.id,
       serviceTitle: selectedService.title,
@@ -149,7 +163,7 @@ const RdvModalSimplified = ({ date, onClose, onRefresh }: RdvModalSimplifiedProp
       staffId: selectedStaff,
       start: startDateTime.toISOString(),
       end: endDateTime.toISOString(),
-      price: selectedService.price,
+      price: price,
       source: 'RdvCalendar',
       createdAt: serverTimestamp()
     };
@@ -223,7 +237,7 @@ const RdvModalSimplified = ({ date, onClose, onRefresh }: RdvModalSimplifiedProp
                            }}
                          >
                            <span>{service.title}</span>
-                           <span>{service.price}€</span>
+                           <span>{service.originalPrice}€</span>
                          </Button>
                         ))}
                       </div>
@@ -272,7 +286,7 @@ const RdvModalSimplified = ({ date, onClose, onRefresh }: RdvModalSimplifiedProp
               <p className="text-gray-800"><strong>Date :</strong> {format(date, 'dd MMMM yyyy', { locale: fr })}</p>
               <p className="text-gray-800"><strong>Heure :</strong> {selectedTime}</p>
               <p className="text-gray-800"><strong>Durée :</strong> {selectedService.duration} min</p>
-              <p className="text-gray-800"><strong>Prix :</strong> {selectedService.price} €</p>
+              <p className="text-gray-800"><strong>Prix :</strong> {selectedService.originalPrice} €</p>
             </div>
           )}
 

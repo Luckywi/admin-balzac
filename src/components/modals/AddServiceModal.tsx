@@ -6,12 +6,20 @@ import { Textarea } from "../ui/textarea";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ServiceData {
   title: string;
   description: string;
   duration: string; // format HH:mm
-  price: string;
+  originalPrice: string;
+  discount: string; // "-15", "-30", "-50" ou "" (aucune)
 }
 
 interface AddServiceModalProps {
@@ -20,12 +28,20 @@ interface AddServiceModalProps {
   sectionId: string;
 }
 
+const discountOptions = [
+  { value: "", label: "Aucune" },
+  { value: "-15", label: "15%" },
+  { value: "-30", label: "30%" },
+  { value: "-50", label: "50%" }
+];
+
 const AddServiceModal = ({ onClose, onSubmit, sectionId }: AddServiceModalProps) => {
   const [serviceData, setServiceData] = useState<ServiceData>({
     title: '',
     description: '',
     duration: '00:30',
-    price: '0'
+    originalPrice: '0',
+    discount: ''
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof ServiceData, string>>>({});
@@ -41,6 +57,28 @@ const AddServiceModal = ({ onClose, onSubmit, sectionId }: AddServiceModalProps)
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
+
+  const handleDiscountChange = (value: string) => {
+    setServiceData(prev => ({
+      ...prev,
+      discount: value
+    }));
+    if (errors.discount) {
+      setErrors(prev => ({ ...prev, discount: '' }));
+    }
+  };
+
+  const calculateDiscountedPrice = (originalPrice: number, discount: string): number => {
+    if (!discount) return originalPrice;
+    
+    const discountValue = parseInt(discount);
+    if (isNaN(discountValue)) return originalPrice;
+    
+    // Calculer le prix réduit 
+    // Par exemple, pour une réduction de -15% sur 100€, on applique 100€ * (1 - 0.15) = 85€
+    return originalPrice * (1 + discountValue / 100); // discount est négatif (ex: -15)
+  };
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,9 +97,9 @@ const AddServiceModal = ({ onClose, onSubmit, sectionId }: AddServiceModalProps)
       newErrors.duration = 'La durée doit être supérieure à 0 minute';
     }
 
-    const price = parseFloat(serviceData.price);
-    if (isNaN(price) || price < 0) {
-      newErrors.price = 'Le prix ne peut pas être négatif';
+    const originalPrice = parseFloat(serviceData.originalPrice);
+    if (isNaN(originalPrice) || originalPrice < 0) {
+      newErrors.originalPrice = 'Le prix ne peut pas être négatif';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -71,15 +109,27 @@ const AddServiceModal = ({ onClose, onSubmit, sectionId }: AddServiceModalProps)
 
     try {
       setIsSubmitting(true);
-      const serviceToAdd = {
-        title: serviceData.title.trim(),
-        description: serviceData.description.trim(),
-        duration: totalDuration,
-        price: price,
-        sectionId: sectionId,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      };
+      
+      // Calculer le prix après réduction si applicable
+      const discountedPrice = serviceData.discount 
+        ? calculateDiscountedPrice(originalPrice, serviceData.discount)
+        : undefined;
+      
+        const serviceToAdd = {
+          title: serviceData.title.trim(),
+          description: serviceData.description.trim(),
+          duration: totalDuration,
+          originalPrice: originalPrice,
+          discount: serviceData.discount ? parseInt(serviceData.discount) : null,
+          discountedPrice: serviceData.discount 
+            ? calculateDiscountedPrice(originalPrice, serviceData.discount)
+            : null,
+          sectionId: sectionId,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+        
+      
       const servicesRef = collection(db, 'services');
       await addDoc(servicesRef, serviceToAdd);
 
@@ -152,19 +202,57 @@ const AddServiceModal = ({ onClose, onSubmit, sectionId }: AddServiceModalProps)
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="price" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="originalPrice" className="text-sm font-medium text-gray-700">
                 Prix (€) <span className="text-red-500">*</span>
               </Label>
               <Input
                 type="text"
-                id="price"
-                name="price"
-                value={serviceData.price}
+                id="originalPrice"
+                name="originalPrice"
+                value={serviceData.originalPrice}
                 onChange={handleChange}
                 className="w-full border border-gray-800 rounded-md shadow-sm focus:outline-none focus:ring-0 focus:border-gray-800"
                 disabled={isSubmitting}
               />
-              {errors.price && <p className="mt-1 text-sm text-red-600">{errors.price}</p>}
+              {errors.originalPrice && <p className="mt-1 text-sm text-red-600">{errors.originalPrice}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="discount" className="text-sm font-medium text-gray-700">
+                Réduction
+              </Label>
+              <Select
+                value={serviceData.discount}
+                onValueChange={handleDiscountChange}
+              >
+                <SelectTrigger className="w-full border border-gray-800 rounded-md bg-white text-gray-800 shadow-sm focus:border-gray-800 focus:ring-gray-800">
+                  <SelectValue placeholder="Sélectionner une réduction" />
+                </SelectTrigger>
+                <SelectContent>
+                  {discountOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.discount && <p className="mt-1 text-sm text-red-600">{errors.discount}</p>}
+
+              {serviceData.discount && serviceData.originalPrice && (
+  <div className="mt-2 text-sm text-gray-600 flex items-center">
+    <span className="mr-2">Prix après réduction:</span>
+    <span className="font-medium text-red-600">
+      {calculateDiscountedPrice(
+        parseFloat(serviceData.originalPrice),
+        serviceData.discount
+      ).toFixed(2)} €
+    </span>
+    <span className="ml-2 text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">
+      {Math.abs(parseInt(serviceData.discount))}% de réduction
+    </span>
+  </div>
+)}
+
             </div>
           </div>
 

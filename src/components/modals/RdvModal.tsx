@@ -14,13 +14,15 @@ interface RdvModalProps {
   onClose: () => void;
 }
 
-// Types pour les services et sections
+// Types mis à jour pour les services et sections
 interface Service {
   id: string;
   title: string;
   description: string;
   duration: number;
-  price: number;
+  originalPrice: number;
+  discountedPrice?: number;
+  discount?: number;
   sectionId: string;
 }
 
@@ -178,14 +180,16 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
       }));
       setSections(sectionsData);
       
-      // Charger les services
+      // Charger les services avec les nouveaux champs
       const servicesSnapshot = await getDocs(collection(db, 'services'));
       const servicesData = servicesSnapshot.docs.map(doc => ({
         id: doc.id,
         title: doc.data().title,
         description: doc.data().description || '',
         duration: doc.data().duration || 30,
-        price: doc.data().price || 0,
+        originalPrice: doc.data().originalPrice || 0,
+        discountedPrice: doc.data().discountedPrice,
+        discount: doc.data().discount,
         sectionId: doc.data().sectionId
       }));
       setServices(servicesData);
@@ -386,6 +390,9 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
       
       const endDateTime = new Date(startDateTime.getTime() + selectedService.duration * 60000);
       
+      // Utiliser le prix original comme demandé
+      const price = selectedService.originalPrice;
+      
       const rdvData = {
         serviceId: selectedService.id,
         serviceTitle: selectedService.title,
@@ -396,7 +403,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
         notes: formData.notes,
         clientName: formData.clientName,
         clientPhone: formData.clientPhone,
-        price: selectedService.price,
+        price: price,
         source: 'RdvSalon', // Marquer comme créé depuis le salon
         createdAt: serverTimestamp(),
       };
@@ -555,7 +562,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                                     onClick={() => handleSelectService(service)}
                                   >
                                     <span className="text-gray-800">{service.title}</span>
-                                    <span className="text-gray-600">{service.price} €</span>
+                                    <span className="text-gray-600">{service.originalPrice} €</span>
                                   </div>
                                 ))}
                                 {getServicesForSection(section.id).length === 0 && (
@@ -727,7 +734,7 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Prix:</span>
-                        <span className="font-medium">{selectedService.price} €</span>
+                        <span className="font-medium">{selectedService.originalPrice} €</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Durée:</span>
@@ -796,3 +803,4 @@ const RdvModal = ({ isOpen, onClose }: RdvModalProps) => {
 };
 
 export default RdvModal;
+                              

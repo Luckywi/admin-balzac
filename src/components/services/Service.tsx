@@ -23,16 +23,18 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { PlusCircle, Edit, Trash2, Scissors } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Scissors, Tag } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 
-// Interfaces existantes
+// Interfaces mises à jour
 interface ServiceItem {
   id: string;
   title: string;
   description: string;
   duration: number;
-  price: number;
+  originalPrice: number;
+  discountedPrice?: number;
+  discount?: number;
   sectionId: string;
 }
 
@@ -40,7 +42,8 @@ interface ServiceData {
   title: string;
   description: string;
   duration: string;
-  price: string;
+  originalPrice: string;
+  discount: string;
 }
 
 interface ServiceSection {
@@ -92,7 +95,9 @@ const Service = () => {
             title: doc.data().title,
             description: doc.data().description || '',
             duration: doc.data().duration || 30,
-            price: doc.data().price || 0,
+            originalPrice: doc.data().originalPrice || 0,
+            discountedPrice: doc.data().discountedPrice,
+            discount: doc.data().discount,
             sectionId: doc.data().sectionId
           }));
           
@@ -135,7 +140,8 @@ const Service = () => {
   const handleAddSection = (title: string) => {
     setIsAddSectionModalOpen(false);
   };
-  
+
+
   const handleEditSection = async (id: string, title: string) => {
     setIsEditSectionModalOpen(false);
     setCurrentSectionId(null);
@@ -378,13 +384,36 @@ const Service = () => {
                                 </div>
                               </CardHeader>
                               <CardFooter className="p-4 pt-2 flex justify-between items-center">
-                                <Badge variant="outline" className="bg-gray-50 text-gray-700 flex items-center gap-1">
-                                  <Scissors className="h-3 w-3" />
-                                  {formatDuration(service.duration)}
-                                </Badge>
-                                <span className="font-bold text-gray-800">
-                                  {formatPrice(service.price)}
-                                </span>
+                                <div className="flex gap-2">
+                                  <Badge variant="outline" className="bg-gray-50 text-gray-700 flex items-center gap-1">
+                                    <Scissors className="h-3 w-3" />
+                                    {formatDuration(service.duration)}
+                                  </Badge>
+                                  
+                                  {service.discount && (
+                                    <Badge className="bg-red-100 text-red-700 border-red-200 flex items-center gap-1">
+                                      <Tag className="h-3 w-3" />
+                                      {Math.abs(service.discount)}%
+                                    </Badge>
+                                  )}
+                                </div>
+                                
+                                <div className="text-right">
+                                  {service.discount ? (
+                                    <>
+                                      <div className="line-through text-sm text-gray-500">
+                                        {formatPrice(service.originalPrice)}
+                                      </div>
+                                      <div className="font-bold text-red-600">
+                                        {formatPrice(service.discountedPrice || service.originalPrice)}
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <span className="font-bold text-gray-800">
+                                      {formatPrice(service.originalPrice)}
+                                    </span>
+                                  )}
+                                </div>
                               </CardFooter>
                             </Card>
                           ))}
@@ -460,7 +489,14 @@ const Service = () => {
             sections
               .find(s => s.id === currentSectionId)
               ?.services.find(serv => serv.id === currentServiceId) || 
-              { id: '', title: '', description: '', duration: 30, price: 0, sectionId: currentSectionId }
+              { 
+                id: '', 
+                title: '', 
+                description: '', 
+                duration: 30, 
+                originalPrice: 0,
+                sectionId: currentSectionId
+              }
           }
           serviceId={currentServiceId}
         />
@@ -470,3 +506,5 @@ const Service = () => {
 };
 
 export default Service;
+  
+ 
