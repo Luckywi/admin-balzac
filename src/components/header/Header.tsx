@@ -16,8 +16,9 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
   };
 
   return (
-    <header className="bg-gray-800 text-white shadow-md w-full">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+    <header className="bg-gray-800 pt-7 text-white shadow-md w-full">
+
+<div className="container mx-auto px-4 pt-[env(safe-area-inset-top)] pb-3 flex items-center justify-between">
         {/* Hamburger Icon */}
         <button 
           onClick={onToggleSidebar} 

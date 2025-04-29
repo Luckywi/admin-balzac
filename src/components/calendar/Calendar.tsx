@@ -118,6 +118,25 @@ const Calendar: React.FC<{ staffFilter?: string }> = ({ staffFilter }) => {
   const [salonConfig, setSalonConfig] = useState<SalonConfig | null>(null);
   const [staffAvailability, setStaffAvailability] = useState<StaffAvailability | null>(null);
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) { // 768px = breakpoint mobile classique
+        setView('day');
+      } else {
+        setView('week');
+      }
+    };
+  
+    handleResize(); // Appeler au premier rendu
+  
+    window.addEventListener('resize', handleResize);
+  
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+  
+
 
   useEffect(() => {
     let touchStartX = 0;
@@ -141,7 +160,8 @@ const handleTouchEnd = (e: TouchEvent) => {
   // Ne rien faire si le swipe est trop court (pour éviter les faux positifs)
   if (Math.abs(diffX) < 130) return;
 
-  const direction = diffX > 0 ? 'left' : 'right';
+  const direction = diffX > 0 ? 'right' : 'left';
+
 
   const newDate = new Date(currentDate);
   const offset = view === 'day' ? 1 : 7;
