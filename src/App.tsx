@@ -2,14 +2,14 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import Dashboard from './pages/Dashboard'
 import ServicesPage from './pages/ServicesPage'
-import { registerDeviceToken } from './lib/registerDeviceToken'; 
+import { registerPushNotifications } from './lib/pushNotifications';
 import { useEffect } from 'react';
 
 
 function App() {
   useEffect(() => {
-    registerDeviceToken();
-  }, []);
+    registerPushNotifications();
+  }, []);  
   return (
     <BrowserRouter>
       <Routes>

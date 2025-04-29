@@ -1,8 +1,12 @@
-import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
+/* eslint-disable no-undef */
+/* eslint-env node */
+
+const functions = require('firebase-functions');
+const admin = require('firebase-admin');
+
 admin.initializeApp();
 
-export const sendNewRdvNotification = functions.firestore
+exports.sendNewRdvNotification = functions.firestore
   .document('rdvs/{rdvId}')
   .onCreate(async (snap, context) => {
     const rdv = snap.data();
@@ -15,8 +19,7 @@ export const sendNewRdvNotification = functions.firestore
       return;
     }
 
-    // 🕒 Format de la date/heure du RDV
-    const rdvDate = rdv.start.toDate(); // Convertir Firestore Timestamp en JS Date
+    const rdvDate = rdv.start.toDate();
     const formattedDate = rdvDate.toLocaleString('fr-FR', {
       weekday: 'short',
       day: '2-digit',
@@ -33,15 +36,15 @@ export const sendNewRdvNotification = functions.firestore
         sound: 'default',
       },
       data: {
-        click_action: 'FLUTTER_NOTIFICATION_CLICK',
-        rdvId: context.params.rdvId
+        rdvId: context.params.rdvId,
+        click_action: 'FLUTTER_NOTIFICATION_CLICK'
       }
     };
 
     try {
-        const response = await admin.messaging().sendToDevice(tokens, payload);
-        console.log(`✅ ${response.successCount} notification(s) envoyée(s) sur ${tokens.length}`);        
+      const response = await admin.messaging().sendToDevice(tokens, payload);
+      console.log(`✅ ${response.successCount} notification(s) envoyée(s) sur ${tokens.length}`);
     } catch (error) {
-      console.error('Erreur d’envoi des notifications:', error);
+      console.error('❌ Erreur d’envoi des notifications :', error);
     }
   });

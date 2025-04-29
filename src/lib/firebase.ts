@@ -1,7 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getFirestore } from 'firebase/firestore';
-import { getMessaging } from "firebase/messaging";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -22,8 +21,7 @@ const db = getFirestore(app);
 // Initialisation Analytics (optionnel)
 const analytics = getAnalytics(app);
 
-// Initialisation Messaging
-const messaging = getMessaging(app);
+// Initialisation Messagin
 
 // 🛠️ Exporter tout ce qu'on utilise
-export { db, analytics, messaging };
+export { db };
